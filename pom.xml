@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>peterbloem.nl</groupId>
+  <artifactId>motive</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>motive</name>
+  <description>Proof-of-concept library for motif analysis with MDL techniques</description>
+  
+  <dependencies>
+  	<dependency>
+	    <groupId>com.github.pbloem</groupId>
+	    <artifactId>kit</artifactId>
+	    <version>v0.1.0</version>
+	</dependency>  
+	<dependency>
+	    <groupId>com.github.Data2Semantics</groupId>
+	    <artifactId>nodes</artifactId>
+	    <version>v0.1.0</version>
+	</dependency>	
+	   
+  </dependencies>
+  
+  <repositories>
+	<repository>
+	    <id>jitpack.io</id>
+	    <url>https://jitpack.io</url>
+	</repository>
+  </repositories>
+</project>

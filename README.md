@@ -3,7 +3,7 @@ A proof-of-concept library for motif analysis using MDL techniques. It contains 
 
 ## Installation and use
 
-Each release on github comes with a compiled JAR file which you can run as a command-line program. See the section _examples_ below.
+Each release on github comes with a compiled JAR file which you can run as a command-line program. Download [the latest one here](https://github.com/pbloem/motive/releases/tag/v0.1.0). See the section _examples_ below, for how to use it.
 
 If you would like to call the code directly from your own program, the simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/pbloem/motive). Just include the following repository in your pom:
 
@@ -31,6 +31,11 @@ Have a look at the classes Compare and CompareLarge for hints on how to set up a
 
 ## Examples
 
+Display usage information:
+```bash
+java -jar motive.jar --help 
+```
+
 Run the "synthetic" experiment: create random graphs with injected motifs.
 
 ```bash
@@ -45,6 +50,7 @@ java -jar motive.jar --type fast --file /Users/Peter/Documents/Datasets/graphs/c
 
 The "full" experiment includes the precise DS model as well. This is a bit slower.
 ```bash
+java -jar motive.jar --type full --file /Users/Per/Documents/Datasets/graphs/cit/simple.txt --minsize 3 --maxsize 5 --samples 100000 --maxmotifs 30
 ```  
 ## Plotting
 

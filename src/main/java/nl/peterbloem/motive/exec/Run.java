@@ -8,7 +8,10 @@ import java.util.List;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.nodes.DGraph;
+import org.nodes.Graph;
 import org.nodes.compression.Functions;
+import org.nodes.data.Data;
 
 import nl.peterbloem.kit.Global;
 
@@ -20,41 +23,57 @@ public class Run {
 		usage="Selects the type of experiment, one of: synth (synthetic graph experiment), full (motif extraction with all null models), fast (skip the DS model)}.")
 	private static String type = "fast";
 	
+	@Option(
+			name="--samples",
+			usage="Number of samples to take.")
+	private static int samples = 1000000;
+	@Option(
+			name="--minsize",
+			usage="Minimum motif size in nodes (inclusive).")
 	private static int minSize = 3;
-	
+	@Option(
+			name="--maxsize",
+			usage="Maximum motif size in nodes (inclusive).")
 	private static int maxSize = 6;
 	
-	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line)")
-	private static File graph;
+	@Option(
+			name="--maxmotifs",
+			usage="Maximum number of motifs to test.")
+	private static int maxMotifs = 100;
 	
-	@Option(name="--directed", usage="Whether the input is directed or not.")
-	private static boolean directed;
+	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line). Multiple edges and self-loops are ignored.")
+	private static File file;
 	
+	@Option(name="--undirected", usage="If the input should be interpeted as undirected.")
+	private static boolean undirected = false;
+	
+	@Option(name="--help", usage="Print usage information.", aliases={"-h"}, help=true)
+	private static boolean help = false;
 	
 	@Option(
 			name="--synth.repeats",
 			usage="How often the synth experiment should be repeated.")
-		private static int synthRepeats = 10;
+	private static int synthRepeats = 10;
 	
 	@Option(
 			name="--synth.n",
 			usage="Number of nodes in the sampled graph.")
-		private static int synthN = 5000;
+	private static int synthN = 5000;
 	
 	@Option(
 			name="--synth.m",
 			usage="Number of links in the sampled graph.")
-		private static int synthM = 10000;
+	private static int synthM = 10000;
 	
 	@Option(
 			name="--synth.instances",
 			usage="Number of motif instances to inject. Should be a list of comma-separated ints (no spaces).")
-		private static String synthNumInstances = "0,10,100";
+	private static String synthNumInstances = "0,10,100";
 	
 	@Option(
 			name="--synth.maxdegree",
 			usage="Maximum degree for an instance node.")
-		private static int synthMaxDegree = 5;
+	private static int synthMaxDegree = 5;
 	
 	/**
 	 * Main executable function
@@ -77,6 +96,13 @@ public class Run {
 	        
 	        System.exit(1);	
 	    }
+    	
+    	if(help)
+    	{
+	        parser.printUsage(System.out);
+	        
+	        System.exit(0);	
+    	}
     	
     	if ("synth".equals(type.toLowerCase()))
     	{
@@ -117,20 +143,77 @@ public class Run {
     	{
     		Global.log().info("Experiment type: fast");
     		
+    		if(undirected)
+    			throw new IllegalArgumentException("fast experiment is currently only implemented for directed graphs (please make a ticket on the github page if you need this feature for undirected graphs).");
+    		
+    		DGraph<String> data;
+    		try {
+				data = Data.edgeListDirectedUnlabeledSimple(file);
+			} catch (IOException e) {
+				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
+			}
+    		
+    		CompareLarge large = new CompareLarge();
+    		
+    		large.dataName = file.getName();
+    		large.data = data;
+    		large.motifMinSize = minSize;
+    		large.motifMaxSize = maxSize;
+    		large.maxMotifs = maxMotifs;
+    		large.motifSamples = samples;
+    		
+       		Global.log().info("Starting experiment.");
+    		Functions.tic();
+    		try {
+    			large.main();
+    		} catch(IOException e)
+    		{
+    			throw new RuntimeException("Encountered a problem when writing the results to disk.", e);
+    		}
+    		
+    		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
     		
     	} else if ("full".equals(type.toLowerCase()))
     	{
     		Global.log().info("Experiment type: full");
 		
+    		Graph<String> data;
+    		try {
+    			if(undirected)
+    			{
+    				data = Data.edgeListUndirectedUnlabeled(file, true); // TODO: read as simple graph (like directed)
+    			} else
+    				data = Data.edgeListDirectedUnlabeledSimple(file);
+			} catch (IOException e) {
+				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
+			}
     		
+    		Compare large = new Compare();
+    		
+    		large.dataName = file.getName();
+    		large.data = data;
+    		large.motifMinSize = minSize;
+    		large.motifMaxSize = maxSize;
+    		large.maxMotifs = maxMotifs;
+    		large.motifSamples = samples;
+    		
+       		Global.log().info("Starting experiment.");
+    		Functions.tic();
+    		try {
+    			large.main();
+    		} catch(IOException e)
+    		{
+    			throw new RuntimeException("Encountered a problem when writing the results to disk.", e);
+    		}
+    		
+    		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
     	} else 
     	{
     		Global.log().severe("Experiment type " + type + " not recognized. Exiting.");
+	        System.err.println("java -jar motive.jar [options...]");
+	        parser.printUsage(System.err);
     		System.exit(-1);
     	}
-    	
-    	
-
 	}
 
 }

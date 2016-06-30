@@ -77,19 +77,46 @@ public class CompareLarge
 {	
 	private static final int BS_SAMPLES = 10000;
 
-	public int motifSamples;
-	public int motifMinSize;
+	/** 
+	 * Number of samples to take to find potential motifs 
+	 */
+	public int motifSamples = 1000000;
+	/**
+	 * Minimum motif size (inclusive)
+	 */
+	public int motifMinSize = 3;
+	/**
+	 * Maximum motif size (inclusive)
+	 */
+	public int motifMaxSize = 6;
 	
-	public int motifMaxSize;
-	public DGraph<String> data;
-	public String dataName = "";
+	/**
+	 * The dataset.
+	 */
+	public DGraph<String> data = null;
+	/**
+	 * Name of the dataset (to appear in the plot) 
+	 */
+	public String dataName = "<no dataset name given>";
 	
-	public int maxMotifs;
+	/**
+	 * The maximum number of motifs to test
+	 */
+	public int maxMotifs = 100;
 	
-	public int minFreq;
+	/** 
+	 * Minimum frequency for a motif to be considered
+	 */
+	public int minFreq = 2;
 
-	public int searchDepth;
+	/**
+	 * Depth to which to search for which instances to consider (more is better, but slower, -1 is maximal depth always).
+	 */
+	public int searchDepth = -1;
 	
+	/**
+	 * Whether to reset the DM model at every motif instance.
+	 */
 	private boolean resets = true;
 	
 	public void main() throws IOException
@@ -200,7 +227,7 @@ public class CompareLarge
 		
 		try
 		{
-			FileIO.python(new File("."), "motifs/plot.large.py");
+			FileIO.python(new File("."), "scripts/plot.large.py");
 		} catch (Exception e)
 		{
 			System.out.println("Failed to run plot script. " + e);

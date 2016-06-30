@@ -136,10 +136,12 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 //		SubgraphGenerator<L> gen = new SubgraphGenerator<L>(data, intGen);
 
 		Global.log().info("Start sampling.");
+		int interval = samples / 20;
+		
 		for (int i : Series.series(samples))
 		{
-			if (i % 10000 == 0)
-				System.out.println("Samples finished: " + i);
+			if (i % interval == 0)
+				Global.log().info("Samples finished: " + i + " (" + ((i*100)/samples) + "%)");
 
 			List<Integer> indices = gen.generate();
 			

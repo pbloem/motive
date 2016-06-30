@@ -86,34 +86,75 @@ import nl.peterbloem.motive.UPlainMotifExtractor;
  */
 public class Compare
 {
-	private static final int BS_SAMPLES = 10000;
-
+	/** 
+	 * Number of samples to take to find potential motifs 
+	 */
 	public int motifSamples;
-	public int motifMinSize;
-	public int motifMaxSize;
-	public int betaIterations;
-	public double betaAlpha;
+	
+	/**
+	 * Minimum motif size (inclusive)
+	 */
+	public int motifMinSize = 3;
+	/**
+	 * Maximum motif size (inclusive)
+	 */
+	public int motifMaxSize = 6;
+	
+	/**
+	 * The number of samples to take for the DS model
+	 */
+	public int betaIterations = 50;
+	
+	/**
+	 * The alpha to use in construction significance intervals for the DS model.
+	 */
+	public double betaAlpha = 0.05;
 
-	public Graph<String> data;
+	/**
+	 * The dataset.
+	 */
+	public Graph<String> data = null;
+	
+	/**
+	 * Name of the dataset (to appear in the plot) 
+	 */
 	public String dataName = "";
 	
-	public int maxMotifs;
-	public int minFreq;
+	/**
+	 * The maximum number of motifs to test
+	 */
+	public int maxMotifs = 100;
 	
-	public boolean blank;
+	/** 
+	 * Minimum frequency for a motif to be considered
+	 */
+	public int minFreq = 2;
 	
-	public boolean simplify;
-	public int betaSearchDepth;
+	/**
+	 * Whether to transform the graph to a simple graph before motif extraction
+	 */
+	public boolean simplify = true;
 	
+	/**
+	 * The depth to which to search when using the DS model
+	 */
+	public int betaSearchDepth = -1;
+	
+	/**
+	 * Number of threads to use when sampling for the DS model.
+	 */
 	public static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();;
 	
 	public static enum NullModel{ER, EDGELIST, BETA}
 	
 	boolean directed;
 
+	/**
+	 * Whether to reset the DM moel for each motif instance
+	 */
 	private boolean resets = true;
 	
-	public void run() throws IOException
+	public void main() throws IOException
 	{
 		Global.secureRandom(42);
 		Global.log().info("Threads available: " +  NUM_THREADS);
@@ -126,13 +167,6 @@ public class Compare
 				data = Graphs.toSimpleDGraph((DGraph<String>)data);
 			else
 				data = Graphs.toSimpleUGraph(data);
-		}
-		
-		if(blank)
-		{
-			Global.log().info("Blanking.");
-			data = Graphs.blank(data, "");
-			Global.log().info("Blanked.");
 		}
 		
 		Global.log().info("data nodes: " + data.size());
@@ -191,7 +225,7 @@ public class Compare
 				
 		double baselineER = new ERSimpleModel(true).codelength(data);
 		double baselineEL = new EdgeListModel(Prior.ML).codelength(data);
-		double baselineBeta = 0.0; // new DegreeSequenceModel(betaIterations, betaAlpha, Prior.ML, Margin.LOWERBOUND).codelength(data);
+		double baselineBeta = new DegreeSequenceModel(betaIterations, betaAlpha, Prior.ML, Margin.LOWERBOUND).codelength(data);
 				
 		for(int i : series(subs.size()))
 		{
@@ -233,8 +267,7 @@ public class Compare
 			Global.log().info("null model: Beta");
 			{
 
-				double sizeBeta = 100.0; 
-						// MotifSearchModel.sizeBeta(data, sub, occs, resets, betaIterations, betaAlpha, betaSearchDepth);
+				double sizeBeta = MotifSearchModel.sizeBeta(data, sub, occs, resets, betaIterations, betaAlpha, betaSearchDepth);
 				double factorBeta = baselineBeta - sizeBeta;
 				factorsBeta.add(factorBeta);
 			 
@@ -283,7 +316,7 @@ public class Compare
 		
 		try
 		{
-			FileIO.python(new File("."), "motifs/plot.py");
+			FileIO.python(new File("."), "scripts/plot.py");
 		} catch (Exception e)
 		{
 			Global.log().warning("Failed to run plot script. The script has been copied to the output directory.  (trace:" + e + ")");

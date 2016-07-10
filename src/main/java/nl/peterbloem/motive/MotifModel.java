@@ -52,6 +52,11 @@ import nl.peterbloem.kit.Series;
 
 /**
  * 
+ * Note: we can probably speed up the functions sizeSubbedER and sizeSubbedEL by
+ * implementing it with a loop over motif instances, rather than a loop over the 
+ * whole graph. This would make the complexity independent of the size of the 
+ * graph, allowing graphs of arbitrary size to be tackled.  
+ * 
  * @author Peter
  *
  * @param <G>
@@ -429,6 +434,7 @@ public class MotifModel
 	}
 	
 	private static ERSimpleModel erModel = new ERSimpleModel(true);
+	
 	public static double sizeER(DGraph<?> graph, DGraph<?> sub,
 				List<List<Integer>> occurrences, boolean resetWiring)
 	{		

@@ -125,20 +125,19 @@ public class CompareLarge
 		
 		Global.log().info("Computing motif code lengths");
 		
-		List<? extends DGraph<String>> subs;
-		List<Double> frequencies;
-		List<List<List<Integer>>> occurrences;
 
 		DPlainMotifExtractor<String> ex 
 		= new DPlainMotifExtractor<String>(
 				(DGraph<String>)data, motifSamples, motifMinSize, motifMaxSize, minFreq);
 	
-		subs = new ArrayList<DGraph<String>>(ex.subgraphs());
-		frequencies = new ArrayList<Double>(subs.size());
+		List<? extends DGraph<String>> subs = 
+				new ArrayList<DGraph<String>>(ex.subgraphs());
+		List<Double> frequencies = new ArrayList<Double>(subs.size());
 		for(Graph<String> sub : subs)
 			frequencies.add(ex.frequency((DGraph<String>)sub));
 		
-		occurrences = new ArrayList<List<List<Integer>>>(subs.size());
+		List<List<List<Integer>>> occurrences = 
+				new ArrayList<List<List<Integer>>>(subs.size());
 		for(Graph<String> sub : subs)
 			occurrences.add(ex.occurrences((DGraph<String>)sub));
 	

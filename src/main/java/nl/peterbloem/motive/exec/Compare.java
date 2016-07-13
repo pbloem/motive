@@ -138,7 +138,7 @@ public class Compare
 	/**
 	 * The depth to which to search when using the DS model
 	 */
-	public int betaSearchDepth = -1;
+	public int betaSearchDepth = 3;
 	
 	/**
 	 * Number of threads to use when sampling for the DS model.

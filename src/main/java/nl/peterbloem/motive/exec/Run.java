@@ -48,8 +48,13 @@ public class Run {
 	@Option(name="--filetype", usage="Filetype: edgelist or gml")
 	private static String filetype = "edgelist";
 	
-	@Option(name="--undirected", usage="If the input should be interpeted as undirected.")
+	@Option(name="--undirected", usage="If the input should be interpeted as undirected (only for edgelist files).")
 	private static boolean undirected = false;
+	
+	@Option(
+			name="--full.depth",
+			usage="The search depth for the DS model.")
+	private static int dsDepth = 3;
 	
 	@Option(name="--help", usage="Print usage information.", aliases={"-h"}, help=true)
 	private static boolean help = false;
@@ -215,19 +220,20 @@ public class Run {
 				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
 			}
     		
-    		Compare large = new Compare();
+    		Compare full = new Compare();
     		
-    		large.dataName = file.getName();
-    		large.data = data;
-    		large.motifMinSize = minSize;
-    		large.motifMaxSize = maxSize;
-    		large.maxMotifs = maxMotifs;
-    		large.motifSamples = samples;
+    		full.dataName = file.getName();
+    		full.data = data;
+    		full.motifMinSize = minSize;
+    		full.motifMaxSize = maxSize;
+    		full.maxMotifs = maxMotifs;
+    		full.motifSamples = samples;
+    		full.betaSearchDepth = dsDepth;
     		
        		Global.log().info("Starting experiment.");
     		Functions.tic();
     		try {
-    			large.main();
+    			full.main();
     		} catch(IOException e)
     		{
     			throw new RuntimeException("Encountered a problem when writing the results to disk.", e);

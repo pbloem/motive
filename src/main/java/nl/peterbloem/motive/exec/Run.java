@@ -12,6 +12,7 @@ import org.nodes.DGraph;
 import org.nodes.Graph;
 import org.nodes.compression.Functions;
 import org.nodes.data.Data;
+import org.nodes.data.GML;
 
 import nl.peterbloem.kit.Global;
 
@@ -43,6 +44,9 @@ public class Run {
 	
 	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line). Multiple edges and self-loops are ignored.")
 	private static File file;
+	
+	@Option(name="--filetype", usage="Filetype: edgelist or gml")
+	private static String filetype = "edgelist";
 	
 	@Option(name="--undirected", usage="If the input should be interpeted as undirected.")
 	private static boolean undirected = false;
@@ -148,8 +152,22 @@ public class Run {
     		
     		DGraph<String> data;
     		try {
-				data = Data.edgeListDirectedUnlabeledSimple(file);
-			} catch (IOException e) {
+	    		if("edgelist".equals(filetype.toLowerCase().trim()))
+	    			data = Data.edgeListDirectedUnlabeledSimple(file);
+	    		else if ("gml".equals(filetype.toLowerCase().trim()))
+	    		{
+	    			Graph<String> graph = GML.read(file);
+	    			
+	    			if(! (graph instanceof DGraph<?>))
+	    				throw new IllegalArgumentException("Input file seems to describe an undirected graph. This is not (yet) supported for the fast mode.");
+	    			
+	    			data = (DGraph<String>) graph;
+	    		} else {
+	    			throw new IllegalArgumentException("File type ("+filetype+") not recognized.");
+	    		}
+	    			
+    			
+    		} catch (IOException e) {
 				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
 			}
     		
@@ -178,12 +196,21 @@ public class Run {
     		Global.log().info("Experiment type: full");
 		
     		Graph<String> data;
+    		
+    		
     		try {
-    			if(undirected)
+    			if("edgelist".equals(filetype.trim().toLowerCase()))
     			{
-    				data = Data.edgeListUndirectedUnlabeled(file, true); // TODO: read as simple graph (like directed)
-    			} else
-    				data = Data.edgeListDirectedUnlabeledSimple(file);
+	    			if(undirected)
+	    				data = Data.edgeListUndirectedUnlabeled(file, true); // TODO: read as simple graph (like directed)
+	    			else
+	    				data = Data.edgeListDirectedUnlabeledSimple(file);
+    			} else if ("edgelist".equals(filetype.trim().toLowerCase()))
+    			{
+    				data = GML.read(file);
+    			} else {
+	    			throw new IllegalArgumentException("File type ("+filetype+") not recognized.");
+	    		}
 			} catch (IOException e) {
 				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
 			}

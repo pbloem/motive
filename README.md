@@ -3,7 +3,7 @@ A proof-of-concept library for motif analysis using MDL techniques. It contains 
 
 ## Installation and use
 
-Each release on github comes with a compiled JAR file which you can run as a command-line program. Download [the latest one here](https://github.com/pbloem/motive/releases/tag/v0.1.0). See the section _examples_ below, for how to use it.
+Each release on github comes with a compiled JAR file which you can run as a command-line program. Download [the latest one here](https://github.com/pbloem/motive/releases). See the section _examples_ below, for how to use it.
 
 If you would like to call the code directly from your own program, the simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/pbloem/motive). Just include the following repository in your pom:
 
@@ -27,9 +27,9 @@ and the following dependency:
 ```
 Check the jitpack link above for linking from gradle/sbt/leiningen projects, and to see what the latest release is.
 
-Have a look at the classes Compare and CompareLarge for hints on how to set up a motif experiment.
+Have a look at the classes Compare and CompareLarge for hints on how to set up a motif experiment from within java code. For comman line usage, see the next section.
 
-## Examples
+## Usage examples
 
 Display usage information:
 ```bash
@@ -51,6 +51,7 @@ java -jar motive.jar --type fast --file /Users/Peter/Documents/Datasets/graphs/c
 The "full" experiment includes the precise DS model as well. This is a bit slower.
 ```bash
 java -jar motive.jar --type full --file /Users/Per/Documents/Datasets/graphs/cit/simple.txt --minsize 3 --maxsize 5 --samples 100000 --maxmotifs 30
+
 ```  
 ## Plotting
 

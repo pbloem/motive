@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.nodes.DGraph;
 import org.nodes.DLink;
@@ -46,6 +47,7 @@ import org.nodes.util.bootstrap.LogNormalCI;
 
 import nl.peterbloem.kit.FrequencyModel;
 import nl.peterbloem.kit.Functions;
+import nl.peterbloem.kit.Global;
 import nl.peterbloem.kit.OnlineModel;
 import nl.peterbloem.kit.Pair;
 import nl.peterbloem.kit.Series;
@@ -63,6 +65,20 @@ import nl.peterbloem.kit.Series;
  */
 public class MotifModel
 {
+	private static ExecutorService executor = null;
+	
+	/**
+	 * Sets the threadpool to use (for the beta model). If not set, the beta 
+	 * model will manage its own threads.
+	 *  
+	 * @param executor
+	 */
+	public static void setExecutor(ExecutorService executor)
+	{
+		MotifModel.executor = executor;
+	}
+
+	
 	public static <L> double size(Graph<L> graph, Graph<L> sub,
 			List<List<Integer>> occurrences, StructureModel<Graph<?>> nullModel, boolean resetWiring)
 	{
@@ -135,7 +151,7 @@ public class MotifModel
 	public static <L> double sizeBeta(DGraph<L> graph, DGraph<L> sub,
 			List<List<Integer>> occurrences, boolean resetWiring, int iterations, double alpha)
 	{		
-		int numThreads = Runtime.getRuntime().availableProcessors();
+		int numThreads = Global.numThreads();
 		
 		List<List<Integer>> wiring = new ArrayList<List<Integer>>();
 		Set<Integer> motifNodes = new HashSet<Integer>();
@@ -153,8 +169,8 @@ public class MotifModel
 		List<Double> samples = new ArrayList<Double>(iterations);
 		DSequenceEstimator<String> motifModel = new DSequenceEstimator<String>(sub);
 		DSequenceEstimator<String> subbedModel = new DSequenceEstimator<String>(degrees);
-		motifModel.nonuniform(iterations, numThreads);
-		subbedModel.nonuniform(iterations, numThreads);
+		motifModel.nonuniform(iterations, numThreads, executor);
+		subbedModel.nonuniform(iterations, numThreads, executor);
 		
 		for(int i : series(iterations))
 			samples.add(motifModel.logSamples().get(i) + subbedModel.logSamples().get(i));
@@ -294,8 +310,8 @@ public class MotifModel
 		List<Double> samples = new ArrayList<Double>(iterations);
 		USequenceEstimator<String> motifModel = new USequenceEstimator<String>(sub);
 		USequenceEstimator<String> subbedModel = new USequenceEstimator<String>(degrees);
-		motifModel.nonuniform(iterations, numThreads);
-		subbedModel.nonuniform(iterations, numThreads);
+		motifModel.nonuniform(iterations, numThreads, executor);
+		subbedModel.nonuniform(iterations, numThreads, executor);
 		
 		for(int i : series(iterations))
 			samples.add(motifModel.logSamples().get(i) + subbedModel.logSamples().get(i));

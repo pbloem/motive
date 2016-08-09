@@ -30,6 +30,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONObject;
 import org.nodes.DGraph;
@@ -156,6 +160,21 @@ public class Compare
 	
 	public void main() throws IOException
 	{
+		
+		// * set up thread pools
+		double mix = 0.666; // relative number of threads devoted to sampling
+		// - concurrent threads for sampling
+		int sThreads = Math.max(1, (int)(Global.numThreads() * mix));
+		// - concurrent threads for computing scores
+		int mThreads = Math.max(1, Global.numThreads() - sThreads);
+		
+		Global.log().info(sThreads + " for sampling, " + mThreads + " for computing motif scores.");
+		
+		ExecutorService samplesExecutor = Executors.newFixedThreadPool(sThreads);
+		ExecutorService motifsExecutor = Executors.newFixedThreadPool(sThreads);
+		
+		MotifModel.setExecutor(samplesExecutor);
+		
 		Global.secureRandom(42);
 		Global.log().info("Threads available: " +  NUM_THREADS);
 		
@@ -177,9 +196,10 @@ public class Compare
 		
 		Global.log().info("Computing motif code lengths");
 		
-		List<? extends Graph<String>> subs;
-		List<Double> frequencies;
-		List<List<List<Integer>>> occurrences;
+		List<? extends Graph<String>> subsAll;
+		List<Double> frequenciesAll;
+		
+		final List<List<List<Integer>>> occurrences;
 
 		if(directed)
 		{
@@ -187,14 +207,14 @@ public class Compare
 			= new DPlainMotifExtractor<String>(
 					(DGraph<String>)data, motifSamples, motifMinSize, motifMaxSize, minFreq);
 		
-			subs = new ArrayList<Graph<String>>(ex.subgraphs());
+			subsAll = new ArrayList<Graph<String>>(ex.subgraphs());
 			
-			frequencies = new ArrayList<Double>(subs.size());
-			for(Graph<String> sub : subs)
-				frequencies.add((double)ex.occurrences((DGraph<String>)sub).size());
+			frequenciesAll = new ArrayList<Double>(subsAll.size());
+			for(Graph<String> sub : subsAll)
+				frequenciesAll.add((double)ex.occurrences((DGraph<String>)sub).size());
 			
-			occurrences = new ArrayList<List<List<Integer>>>(subs.size());
-			for(Graph<String> sub : subs)
+			occurrences = new ArrayList<List<List<Integer>>>(subsAll.size());
+			for(Graph<String> sub : subsAll)
 				occurrences.add(ex.occurrences((DGraph<String>)sub));
 		} else
 		{	
@@ -202,103 +222,139 @@ public class Compare
 				= new UPlainMotifExtractor<String>(
 						(UGraph<String>)data, motifSamples, motifMinSize, motifMaxSize, minFreq);
 			
-			subs = new ArrayList<Graph<String>>(ex.subgraphs());
-			frequencies = new ArrayList<Double>(subs.size());
-			for(Graph<String> sub : subs)
-				frequencies.add((double)ex.occurrences((UGraph<String>)sub).size());
+			subsAll = new ArrayList<Graph<String>>(ex.subgraphs());
+			frequenciesAll = new ArrayList<Double>(subsAll.size());
+			for(Graph<String> sub : subsAll)
+				frequenciesAll.add((double)ex.occurrences((UGraph<String>)sub).size());
 			
-			occurrences = new ArrayList<List<List<Integer>>>(subs.size());
-			for(Graph<String> sub : subs)
+			occurrences = new ArrayList<List<List<Integer>>>(subsAll.size());
+			for(Graph<String> sub : subsAll)
 				occurrences.add(ex.occurrences((UGraph<String>)sub));
 		}
 		
-		if(subs.size() > maxMotifs)
+		
+		final List<? extends Graph<String>> subs;
+		final List<Double> frequencies;
+		if(subsAll.size() > maxMotifs)
 		{
-			subs = new ArrayList<Graph<String>>(subs.subList(0, maxMotifs));
-			frequencies = new ArrayList<Double>(frequencies.subList(0, maxMotifs));
+			subs = new ArrayList<Graph<String>>(subsAll.subList(0, maxMotifs));
+			frequencies = new ArrayList<Double>(frequenciesAll.subList(0, maxMotifs));
+		} else
+		{
+			subs = subsAll;
+			frequencies = frequenciesAll;
 		}
-			
-		List<Double> factorsER   = new ArrayList<Double>(subs.size());
-		List<Double> factorsEL   = new ArrayList<Double>(subs.size());
-		List<Double> factorsBeta = new ArrayList<Double>(subs.size());
-		List<Double> maxFactors   =  new ArrayList<Double>(subs.size());
+		
+		final Map<Graph<String>, Double> factorsERMap   = new ConcurrentHashMap<Graph<String>, Double>();
+		final Map<Graph<String>, Double> factorsELMap   = new ConcurrentHashMap<Graph<String>, Double>();
+		final Map<Graph<String>, Double> factorsBetaMap = new ConcurrentHashMap<Graph<String>, Double>();
+		final Map<Graph<String>, Double> maxFactorsMap  = new ConcurrentHashMap<Graph<String>, Double>();
 				
-		double baselineER = new ERSimpleModel(true).codelength(data);
-		double baselineEL = new EdgeListModel(Prior.ML).codelength(data);
-		double baselineBeta = new DegreeSequenceModel(betaIterations, betaAlpha, Prior.ML, Margin.LOWERBOUND).codelength(data);
+		final double baselineER = new ERSimpleModel(true).codelength(data);
+		final double baselineEL = new EdgeListModel(Prior.ML).codelength(data);
+		final double baselineBeta = new DegreeSequenceModel(betaIterations, betaAlpha, Prior.ML, Margin.LOWERBOUND).codelength(data);
 				
-		for(int i : series(subs.size()))
+		for(final int i : series(subs.size()))
 		{
-			Graph<String> sub = subs.get(i);
-			List<List<Integer>> occs = occurrences.get(i);
-			
-			Global.log().info("Analysing sub ("+ (i+1) +" of " + subs.size() + "): " + sub);
-			Global.log().info("freq: " + frequencies.get(i));
-			
-			double max = Double.NEGATIVE_INFINITY;
-
-			Global.log().info("null model: ER");
-			{
-				double sizeER = MotifSearchModel.sizeER(data, sub, occs, resets);
-				double factorER = baselineER - sizeER;
-				factorsER.add(factorER);
-				
-				max = Math.max(max, factorER);
-				 
-				Global.log().info("ER baseline: " + baselineER);
-				Global.log().info("ER motif code: " + sizeER);
-				Global.log().info("ER factor: " + factorER);
-			}
-
-			Global.log().info("null model: EL");
-			{
-				double sizeEL = MotifSearchModel.sizeEL(data, sub, occs,  resets);
+			Thread thread = new Thread(){
+				public void run(){
+					Graph<String> sub = subs.get(i);
+					List<List<Integer>> occs = occurrences.get(i);
 					
-				double factorEL = baselineEL - sizeEL;
-				factorsEL.add(factorEL);
-				
-				max = Math.max(max, factorEL);
-			 
-				Global.log().info("EL baseline: " + baselineEL);
-				Global.log().info("EL motif code: " + sizeEL);
-				Global.log().info("EL factor: " + factorEL);
-			}
+					Global.log().info("Analysing sub ("+ (i+1) +" of " + subs.size() + "): " + sub);
+					Global.log().info("freq: " + frequencies.get(i));
+					
+					double max = Double.NEGATIVE_INFINITY;
 
-			Global.log().info("null model: Beta");
-			{
+					Global.log().info("null model: ER");
+					{
+						double sizeER = MotifSearchModel.sizeER(data, sub, occs, resets);
+						double factorER = baselineER - sizeER;
+						factorsERMap.put(sub, factorER);
+						
+						max = Math.max(max, factorER);
+						 
+						Global.log().info("ER baseline: " + baselineER);
+						Global.log().info("ER motif code: " + sizeER);
+						Global.log().info("ER factor: " + factorER);
+					}
 
-				double sizeBeta = MotifSearchModel.sizeBeta(data, sub, occs, resets, betaIterations, betaAlpha, betaSearchDepth);
-				double factorBeta = baselineBeta - sizeBeta;
-				factorsBeta.add(factorBeta);
-			 
-				max = Math.max(max, factorBeta);
-				
-				Global.log().info("Beta baseline: " + baselineBeta);
-				Global.log().info("Beta motif code: " + sizeBeta);
-				Global.log().info("Beta factor: " + factorBeta);
-			}
+					Global.log().info("null model: EL");
+					{
+						double sizeEL = MotifSearchModel.sizeEL(data, sub, occs,  resets);
+							
+						double factorEL = baselineEL - sizeEL;
+						factorsELMap.put(sub, factorEL);
+						
+						max = Math.max(max, factorEL);
+					 
+						Global.log().info("EL baseline: " + baselineEL);
+						Global.log().info("EL motif code: " + sizeEL);
+						Global.log().info("EL factor: " + factorEL);
+					}
+
+					Global.log().info("null model: Beta");
+					{
+
+						double sizeBeta = MotifSearchModel.sizeBeta(data, sub, occs, resets, betaIterations, betaAlpha, betaSearchDepth);
+						double factorBeta = baselineBeta - sizeBeta;
+						factorsBetaMap.put(sub, factorBeta);
+					 
+						max = Math.max(max, factorBeta);
+						
+						Global.log().info("Beta baseline: " + baselineBeta);
+						Global.log().info("Beta motif code: " + sizeBeta);
+						Global.log().info("Beta factor: " + factorBeta);
+					}
+					
+					maxFactorsMap.put(sub, max);
+				}
+			};
 			
-			maxFactors.add(max);
+			motifsExecutor.execute(thread);
+		}
+		
+		// * Execute all threads and wait until finished
+		motifsExecutor.shutdown();
+		try 
+		{
+			motifsExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+		List<Double> factorsER   = new ArrayList<Double>(subsAll.size());
+		List<Double> factorsEL   = new ArrayList<Double>(subsAll.size());
+		List<Double> factorsBeta = new ArrayList<Double>(subsAll.size());
+		List<Double> maxFactors   =  new ArrayList<Double>(subsAll.size());
+		
+		for(int i : series(subsAll.size()))
+		{
+			Graph<String> sub = subsAll.get(i);
+			factorsER.add(factorsERMap.get(sub));
+			factorsEL.add(factorsELMap.get(sub));
+			factorsBeta.add(factorsBetaMap.get(sub));
+			maxFactors.add(maxFactorsMap.get(sub));
 		}
 		
 		Comparator<Double> comp = Functions.natural();
 		Functions.sort(
 				factorsBeta, Collections.reverseOrder(comp),
-				(List) frequencies,
+				(List) frequenciesAll,
 				(List) factorsER, 
 				(List) factorsEL, 
 				(List) factorsBeta, 
-				(List) subs);
+				(List) subsAll);
 		
 		File numbersFile = new File("numbers.csv");
 		
 		BufferedWriter numbersWriter = new BufferedWriter(new FileWriter(numbersFile));
-		for(int i : series(subs.size()))
-			numbersWriter.write(frequencies.get(i) + ", " + factorsER.get(i) + ", " + factorsEL.get(i) + ", " + factorsBeta.get(i) + "\n");		
+		for(int i : series(subsAll.size()))
+			numbersWriter.write(frequenciesAll.get(i) + ", " + factorsER.get(i) + ", " + factorsEL.get(i) + ", " + factorsBeta.get(i) + "\n");		
 		numbersWriter.close();
 
 		int i = 0;
-		for(Graph<String> sub : subs)
+		for(Graph<String> sub : subsAll)
 		{
 			File graphFile = new File(String.format("motif.%03d.edgelist", i));
 			Data.writeEdgeList(sub, graphFile);

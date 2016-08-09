@@ -51,6 +51,9 @@ public class Run {
 	@Option(name="--undirected", usage="If the input should be interpeted as undirected (only for edgelist files).")
 	private static boolean undirected = false;
 	
+	@Option(name="--threads", usage="Number of threads to run simultaneaously. Default is the number of cores available. In full mode, there will always be at least 2 concurrent threads, even if this value is 1.")
+	private static int threads = Global.numThreads();
+	
 	@Option(
 			name="--full.depth",
 			usage="The search depth for the DS model.")
@@ -89,7 +92,7 @@ public class Run {
 	 * @param args
 	 */
 	public static void main(String[] args) 
-	{
+	{	
 		Run run = new Run();
 		
 		// * Parse the command-line arguments
@@ -112,6 +115,9 @@ public class Run {
 	        
 	        System.exit(0);	
     	}
+    	
+		Global.setNumThreads(threads);
+		Global.log().info("Using " + Global.numThreads() + " concurrent threads");
     	
     	if ("synth".equals(type.toLowerCase()))
     	{

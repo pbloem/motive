@@ -16,12 +16,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONObject;
 import org.nodes.DGraph;
@@ -110,7 +117,7 @@ public class CompareLarge
 	public int minFreq = 2;
 
 	/**
-	 * Depth to which to search for which instances to consider (more is better, but slower, -1 is maximal depth always).
+	 * Depth to which to search for which instances to discard (more is better but slower, -1 is maximal depth always).
 	 */
 	public int searchDepth = -1;
 	
@@ -124,73 +131,115 @@ public class CompareLarge
 		nl.peterbloem.kit.Global.secureRandom(42);
 		
 		Global.log().info("Computing motif code lengths");
-		
 
+		// * Sample for motifs, and collect the results
+		
 		DPlainMotifExtractor<String> ex 
 		= new DPlainMotifExtractor<String>(
 				(DGraph<String>)data, motifSamples, motifMinSize, motifMaxSize, minFreq);
 	
-		List<? extends DGraph<String>> subs = 
+		List<? extends DGraph<String>> subsAll = 
 				new ArrayList<DGraph<String>>(ex.subgraphs());
-		List<Double> frequencies = new ArrayList<Double>(subs.size());
-		for(Graph<String> sub : subs)
-			frequencies.add(ex.frequency((DGraph<String>)sub));
+		List<Double> frequenciesAll = new ArrayList<Double>(subsAll.size());
 		
-		List<List<List<Integer>>> occurrences = 
-				new ArrayList<List<List<Integer>>>(subs.size());
-		for(Graph<String> sub : subs)
+		for(Graph<String> sub : subsAll)
+			frequenciesAll.add(ex.frequency((DGraph<String>)sub));
+		
+		final List<List<List<Integer>>> occurrences = 
+				new ArrayList<List<List<Integer>>>(subsAll.size());
+		for(Graph<String> sub : subsAll)
 			occurrences.add(ex.occurrences((DGraph<String>)sub));
 	
-		if(subs.size() > maxMotifs)
+		// - select the top motifs by frquency
+		final List<? extends DGraph<String>> subs;
+		final List<Double> frequencies;
+
+		if(subsAll.size() > maxMotifs)
 		{
-			subs = new ArrayList<DGraph<String>>(subs.subList(0, maxMotifs));
-			frequencies = new ArrayList<Double>(frequencies.subList(0, maxMotifs));
+			subs = new ArrayList<DGraph<String>>(subsAll.subList(0, maxMotifs));
+			frequencies = new ArrayList<Double>(frequenciesAll.subList(0, maxMotifs));
+		} else
+		{
+			subs = subsAll;
+			frequencies = frequenciesAll;
 		}
 					
+		final Map<DGraph<String>, Double> factorsERMap = new ConcurrentHashMap<DGraph<String>, Double>(subs.size());
+		final Map<DGraph<String>, Double> factorsELMap = new ConcurrentHashMap<DGraph<String>, Double>(subs.size());
+		final Map<DGraph<String>, Double> maxFactorsMap = new ConcurrentHashMap<DGraph<String>, Double>(subs.size());
+
+		final double baselineER = (new ERSimpleModel(false)).codelength(data);
+		final double baselineEL = (new EdgeListModel(Prior.ML)).codelength(data);
+		
+		// * Loop over the top motifs, computing the score for each	
+        ExecutorService executor = Executors.newFixedThreadPool(Global.numThreads());
+
+		for(final int i : series(subs.size()))
+		{			
+			Thread thread = new Thread()
+			{
+				@Override
+				public void run() {
+					
+					DGraph<String> sub = subs.get(i);
+					List<List<Integer>> occs = occurrences.get(i);
+					
+					Global.log().info("Analysing sub ("+ (i+1) +" of " + subs.size() + "): " + sub);
+					Global.log().info("freq: " + frequencies.get(i));
+					
+					double max = Double.NEGATIVE_INFINITY;
+		
+					Global.log().info("null model: ER");
+
+					double sizeER = MotifSearchModel.sizeER(data, sub, occs, resets, searchDepth); 
+					double factorER = baselineER - sizeER;
+					factorsERMap.put(sub, factorER);
+					 
+					Global.log().info("ER baseline: " + baselineER);
+					Global.log().info("ER motif code: " + sizeER);
+					Global.log().info("ER factor: " + factorER);
+					
+					max = Math.max(max, factorER);
+		
+					Global.log().info("null model: EL");
+				
+					double sizeEL = MotifSearchModel.sizeEL(data, sub, occs, resets, searchDepth); 
+					double factorEL = baselineEL - sizeEL;
+					factorsELMap.put(sub, factorEL);
+				 
+					Global.log().info("EL baseline: " + baselineEL);
+					Global.log().info("EL motif code: " + sizeEL);
+					Global.log().info("EL factor: " + factorEL);
+					
+					max = Math.max(max, factorEL);
+		
+					maxFactorsMap.put(sub, max);
+				}
+			};
+			executor.execute(thread);
+		}
+			
+		// * Execute all threads and wait until finished
+		executor.shutdown();
+		try 
+		{
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		
+		
+		// - transfer the scores to lists
 		List<Double> factorsER = new ArrayList<Double>(subs.size());
 		List<Double> factorsEL = new ArrayList<Double>(subs.size());
 		List<Double> maxFactors = new ArrayList<Double>(subs.size());
-
-		double baselineER = (new ERSimpleModel(false)).codelength(data);
-		double baselineEL = (new EdgeListModel(Prior.ML)).codelength(data);
 		
 		for(int i : series(subs.size()))
 		{
 			DGraph<String> sub = subs.get(i);
-			List<List<Integer>> occs = occurrences.get(i);
-			
-			Global.log().info("Analysing sub ("+ (i+1) +" of " + subs.size() + "): " + sub);
-			Global.log().info("freq: " + frequencies.get(i));
-			
-			double max = Double.NEGATIVE_INFINITY;
-
-			Global.log().info("null model: ER");
-			{
-				double sizeER = MotifSearchModel.sizeER(data, sub, occs, resets, searchDepth); 
-				double factorER = baselineER - sizeER;
-				factorsER.add(factorER);
-				 
-				Global.log().info("ER baseline: " + baselineER);
-				Global.log().info("ER motif code: " + sizeER);
-				Global.log().info("ER factor: " + factorER);
-				
-				max = Math.max(max, factorER);
-			}
-
-			Global.log().info("null model: EL");
-			{
-				double sizeEL = MotifSearchModel.sizeEL(data, sub, occs, resets, searchDepth); 
-				double factorEL = baselineEL - sizeEL;
-				factorsEL.add(factorEL);
-			 
-				Global.log().info("EL baseline: " + baselineEL);
-				Global.log().info("EL motif code: " + sizeEL);
-				Global.log().info("EL factor: " + factorEL);
-				
-				max = Math.max(max, factorEL);
-			}
-
-			maxFactors.add(max);
+			factorsER.add(factorsERMap.get(sub));
+			factorsEL.add(factorsELMap.get(sub));
+			maxFactors.add(maxFactorsMap.get(sub));
 		}
 		
 		Comparator<Double> comp = Functions.natural();

@@ -140,7 +140,7 @@ public class UPlainMotifExtractor<L extends Comparable<L>>
 
 		for (int i : Series.series(samples))
 		{
-			if (i % interval == 0)
+			if (samples > 100 && i % interval == 0)
 				Global.log().info("Samples finished: " + i + " (" + ((i*100)/samples) + "%)");
 
 			List<Integer> indices = gen.generate();

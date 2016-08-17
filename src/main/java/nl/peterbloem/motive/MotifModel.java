@@ -291,9 +291,12 @@ public class MotifModel
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 		
 		// * check for any disconnected nodes and add 0s
-		int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
-		while(degrees.size() < expSize)
-			degrees.add(new D(0, 0));
+		if(! occurrences.isEmpty())
+		{	
+			int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+			while(degrees.size() < expSize)
+				degrees.add(new D(0, 0));
+		}
 		
 		return degrees;
 	}
@@ -432,9 +435,12 @@ public class MotifModel
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 		
 		// * check for any disconnected nodes and add 0s
-		int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
-		while(result.size() < expSize)
-			result.add(0);
+		if(! occurrences.isEmpty())
+		{
+			int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+			while(result.size() < expSize)
+				result.add(0);
+		}
 		
 		return result;
 	}	

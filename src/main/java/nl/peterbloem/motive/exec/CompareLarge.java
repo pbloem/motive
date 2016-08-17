@@ -48,6 +48,7 @@ import org.nodes.compression.EdgeListCompressor;
 import org.nodes.compression.NeighborListCompressor;
 import org.nodes.data.Data;
 import org.nodes.models.DSequenceEstimator;
+import static org.nodes.models.DSequenceEstimator.D;
 import org.nodes.models.DegreeSequenceModel.Prior;
 import org.nodes.models.ERSimpleModel;
 import org.nodes.models.EdgeListModel;
@@ -125,12 +126,19 @@ public class CompareLarge
 	 * Whether to reset the DM model at every motif instance.
 	 */
 	private boolean resets = true;
+
+	/**
+	 * Whether to loop over the graph or over the instances.
+	 */
+	public boolean graphLoop = false;
 	
 	public void main() throws IOException
 	{		
 		nl.peterbloem.kit.Global.secureRandom(42);
 		
 		Global.log().info("Computing motif code lengths");
+		
+		final List<D> degrees = graphLoop ? null : DSequenceEstimator.sequence(data);
 
 		// * Sample for motifs, and collect the results
 		
@@ -150,7 +158,7 @@ public class CompareLarge
 		for(Graph<String> sub : subsAll)
 			occurrences.add(ex.occurrences((DGraph<String>)sub));
 	
-		// - select the top motifs by frquency
+		// - select the top motifs by frequency
 		final List<? extends DGraph<String>> subs;
 		final List<Double> frequencies;
 
@@ -191,7 +199,9 @@ public class CompareLarge
 		
 					Global.log().info("null model: ER");
 
-					double sizeER = MotifSearchModel.sizeER(data, sub, occs, resets, searchDepth); 
+					double sizeER = graphLoop ? 
+							MotifSearchModel.sizeER(data, sub, occs, resets, searchDepth) : 
+							MotifSearchModel.sizeERInst(data, sub, occs, resets, searchDepth);
 					double factorER = baselineER - sizeER;
 					factorsERMap.put(sub, factorER);
 					 
@@ -203,7 +213,9 @@ public class CompareLarge
 		
 					Global.log().info("null model: EL");
 				
-					double sizeEL = MotifSearchModel.sizeEL(data, sub, occs, resets, searchDepth); 
+					double sizeEL = graphLoop ?
+							MotifSearchModel.sizeEL(data, sub, occs, resets, searchDepth) :
+							MotifSearchModel.sizeELInst(data, degrees, sub, occs, resets, searchDepth);
 					double factorEL = baselineEL - sizeEL;
 					factorsELMap.put(sub, factorEL);
 				 

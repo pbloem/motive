@@ -158,20 +158,26 @@ public class Compare
 	 */
 	private boolean resets = true;
 	
+	/**
+	 * Relative number of available threads devoted to sampling. 
+	 */
+	public double mix = 0.66;
+	
 	public void main() throws IOException
 	{
 		
 		// * set up thread pools
-		double mix = 0.666; // relative number of threads devoted to sampling
 		// - concurrent threads for sampling
 		int sThreads = Math.max(1, (int)(Global.numThreads() * mix));
+		if((sThreads >= Global.numThreads()) && (sThreads > 1))
+			sThreads = Global.numThreads() - 1;
 		// - concurrent threads for computing scores
 		int mThreads = Math.max(1, Global.numThreads() - sThreads);
 		
-		Global.log().info(sThreads + " for sampling, " + mThreads + " for computing motif scores.");
+		Global.log().info("Concurrent threads: " + sThreads + " for sampling, " + mThreads + " for computing motif scores.");
 		
 		ExecutorService samplesExecutor = Executors.newFixedThreadPool(sThreads);
-		ExecutorService motifsExecutor = Executors.newFixedThreadPool(sThreads);
+		ExecutorService motifsExecutor = Executors.newFixedThreadPool(mThreads);
 		
 		MotifModel.setExecutor(samplesExecutor);
 		
@@ -244,6 +250,8 @@ public class Compare
 			subs = subsAll;
 			frequencies = frequenciesAll;
 		}
+		subsAll = null;
+		frequenciesAll = null;
 		
 		final Map<Graph<String>, Double> factorsERMap   = new ConcurrentHashMap<Graph<String>, Double>();
 		final Map<Graph<String>, Double> factorsELMap   = new ConcurrentHashMap<Graph<String>, Double>();
@@ -323,14 +331,16 @@ public class Compare
 			throw new RuntimeException(e);
 		}
 
-		List<Double> factorsER   = new ArrayList<Double>(subsAll.size());
-		List<Double> factorsEL   = new ArrayList<Double>(subsAll.size());
-		List<Double> factorsBeta = new ArrayList<Double>(subsAll.size());
-		List<Double> maxFactors   =  new ArrayList<Double>(subsAll.size());
+		samplesExecutor.shutdown();
 		
-		for(int i : series(subsAll.size()))
+		List<Double> factorsER   = new ArrayList<Double>(subs.size());
+		List<Double> factorsEL   = new ArrayList<Double>(subs.size());
+		List<Double> factorsBeta = new ArrayList<Double>(subs.size());
+		List<Double> maxFactors   =  new ArrayList<Double>(subs.size());
+		
+		for(int i : series(subs.size()))
 		{
-			Graph<String> sub = subsAll.get(i);
+			Graph<String> sub = subs.get(i);
 			factorsER.add(factorsERMap.get(sub));
 			factorsEL.add(factorsELMap.get(sub));
 			factorsBeta.add(factorsBetaMap.get(sub));
@@ -340,21 +350,21 @@ public class Compare
 		Comparator<Double> comp = Functions.natural();
 		Functions.sort(
 				factorsBeta, Collections.reverseOrder(comp),
-				(List) frequenciesAll,
+				(List) frequencies,
 				(List) factorsER, 
 				(List) factorsEL, 
 				(List) factorsBeta, 
-				(List) subsAll);
+				(List) subs);
 		
 		File numbersFile = new File("numbers.csv");
 		
 		BufferedWriter numbersWriter = new BufferedWriter(new FileWriter(numbersFile));
-		for(int i : series(subsAll.size()))
-			numbersWriter.write(frequenciesAll.get(i) + ", " + factorsER.get(i) + ", " + factorsEL.get(i) + ", " + factorsBeta.get(i) + "\n");		
+		for(int i : series(subs.size()))
+			numbersWriter.write(frequencies.get(i) + ", " + factorsER.get(i) + ", " + factorsEL.get(i) + ", " + factorsBeta.get(i) + "\n");		
 		numbersWriter.close();
 
 		int i = 0;
-		for(Graph<String> sub : subsAll)
+		for(Graph<String> sub : subs)
 		{
 			File graphFile = new File(String.format("motif.%03d.edgelist", i));
 			Data.writeEdgeList(sub, graphFile);
@@ -369,7 +379,7 @@ public class Compare
 		obj.put("baseline el", baselineEL);
 		obj.put("baseline beta", baselineBeta);
 		Functions.write(obj.toString(), new File( "metadata.json"));
-		
+				
 		try
 		{
 			FileIO.python(new File("."), "scripts/plot.py");

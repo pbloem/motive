@@ -8,6 +8,7 @@ import static nl.peterbloem.kit.Functions.log2Factorial;
 import static nl.peterbloem.kit.Functions.logFactorial;
 import static nl.peterbloem.kit.Functions.max;
 import static nl.peterbloem.kit.Functions.prefix;
+import static nl.peterbloem.kit.Pair.p;
 import static nl.peterbloem.kit.Series.series;
 import static org.nodes.motifs.MotifCompressor.MOTIF_SYMBOL;
 
@@ -16,10 +17,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
+
+import javax.jws.WebParam.Mode;
 
 import org.nodes.DGraph;
 import org.nodes.DLink;
@@ -39,10 +44,11 @@ import org.nodes.models.DSequenceEstimator;
 import org.nodes.models.DegreeSequenceModel;
 import org.nodes.models.ERSimpleModel;
 import org.nodes.models.EdgeListModel;
+import org.nodes.models.Model;
 import org.nodes.models.RestrictedToSimple;
 import org.nodes.models.StructureModel;
 import org.nodes.models.USequenceEstimator;
-import org.nodes.models.DSequenceEstimator.D;
+import static org.nodes.models.DSequenceEstimator.D;
 import org.nodes.util.bootstrap.LogNormalCI;
 
 import nl.peterbloem.kit.FrequencyModel;
@@ -57,7 +63,7 @@ import nl.peterbloem.kit.Series;
  * Note: we can probably speed up the functions sizeSubbedER and sizeSubbedEL by
  * implementing it with a loop over motif instances, rather than a loop over the 
  * whole graph. This would make the complexity independent of the size of the 
- * graph, allowing graphs of arbitrary size to be tackled.  
+ * graph, allowing graphs of arbitrary size to be tackled.
  * 
  * @author Peter
  *
@@ -134,8 +140,6 @@ public class MotifModel
 		//   nodes in the data 
 		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbed.size()));
 		
-//		bits.print(System.out);
-
 		return bits.total();
 	}
 	
@@ -286,6 +290,11 @@ public class MotifModel
 		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 		
+		// * check for any disconnected nodes and add 0s
+		int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		while(degrees.size() < expSize)
+			degrees.add(new D(0, 0));
+		
 		return degrees;
 	}
 	
@@ -417,8 +426,15 @@ public class MotifModel
 		for(Pair<Integer, Integer> token : instanceToInstance.tokens())
 			additions.add((int)instanceToInstance.frequency(token) - 1);
 		
-		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
+		rest.add("multi-edges", Functions.prefix(
+				additions.isEmpty() ? 
+				0 : Functions.max(additions)));
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
+		
+		// * check for any disconnected nodes and add 0s
+		int expSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		while(result.size() < expSize)
+			result.add(0);
 		
 		return result;
 	}	
@@ -495,6 +511,116 @@ public class MotifModel
 		return bits.total();
 	}
 	
+	/**
+	 * A version of the ER model that loops only over the instances. It requires 
+	 * the degrees of the graph to be given.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param resetWiring
+	 * @return
+	 */
+	public static double sizeERInst(UGraph<?> graph, UGraph<?> sub,
+			List<List<Integer>> occurrences, boolean resetWiring)
+	{		
+		FrequencyModel<String> bits = new FrequencyModel<String>();
+		
+		bits.add("sub", erModel.codelength(sub));
+
+		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
+		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
+		
+		Pair<Integer, Integer> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		
+		// * store the template graph (as a simple graph) 
+		bits.add("subbed", ERSimpleModel.undirected(pair.first(), pair.second(), true));
+		
+		// * store the multi-edges
+		// - We are storing, for each link, the number of additional edges required
+		//   (so everything's - 1)
+		double mBits = 0.0;
+		int max = (int)multiEdges.frequency(multiEdges.maxToken());
+		mBits += Functions.prefix(max - 1);
+		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
+		
+		// - first loop over all rewired edges
+		for(Pair<Integer, Integer> token : multiEdges.tokens())
+			mBits += model.encode((int)multiEdges.frequency(token) - 1);
+
+		bits.add("multi-edges", mBits);
+		
+		// * Store the rewiring information
+		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
+		
+		// * Store the insertion order, to preserve the precise ordering of the
+		//   nodes in the data
+		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+				
+		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
+		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
+				
+		// bits.print(System.out);
+		
+		return bits.total();
+	}
+	
+	/**
+	 * A version of the EL model that loops only over the instances. It requires 
+	 * the degrees of the graph to be given.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param resetWiring
+	 * @return
+	 */
+	public static double sizeERInst(DGraph<?> graph, DGraph<?> sub,
+			List<List<Integer>> occurrences, boolean resetWiring)
+	{		
+		FrequencyModel<String> bits = new FrequencyModel<String>();
+		
+		bits.add("sub", erModel.codelength(sub));
+
+		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
+		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
+		
+		Pair<Integer, Integer> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		
+		// * store the template graph (as a simple graph) 
+		bits.add("subbed", ERSimpleModel.directed(pair.first(), pair.second(), true));
+		
+		// * store the multi-edges
+		// - We are storing, for each link, the number of additional edges required
+		//   (so everything's - 1)
+		double mBits = 0.0;
+		int max = (int)multiEdges.frequency(multiEdges.maxToken());
+		mBits += Functions.prefix(max - 1);
+		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
+		
+		// - loop over all rewired edges
+		for(Pair<Integer, Integer> token : multiEdges.tokens())
+			mBits += model.encode((int)multiEdges.frequency(token) - 1);
+		
+		bits.add("multi-edges", mBits);
+		
+		// * Store the rewiring information
+		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
+		
+		// * Store the insertion order, to preserve the precise ordering of the
+		//   nodes in the data
+		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+				
+		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
+		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
+				
+		// bits.print(System.out);
+		
+		return bits.total();
+	}	
+	
 	private static void sizeSubbedER(DGraph<?> graph, DGraph<?> sub,
 			List<List<Integer>> occurrences, FrequencyModel<String> bits)
 	{
@@ -558,10 +684,7 @@ public class MotifModel
 		}
 		
 		// * size of the subbed graph under the binomial compressor
-		double n = subbedSize;
-		double t = n * n - n;
-		
-		bits.add("subbed", Functions.prefix((int)n) + Functions.log2(t) + log2Choose(subbedLinks, t));
+		bits.add("subbed", ERSimpleModel.directed(subbedSize, subbedLinks, true));
 		
 		List<Integer> additions = new ArrayList<Integer>(graph.size());
 		for(Pair<Integer, Integer> token : nodeToInstance.tokens())
@@ -570,7 +693,7 @@ public class MotifModel
 			additions.add((int)instanceToNode.frequency(token) - 1);
 		for(Pair<Integer, Integer> token : instanceToInstance.tokens())
 			additions.add((int)instanceToInstance.frequency(token) - 1);
-				
+		
 		bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : max(additions)));
 		bits.add("multiple-edges", OnlineModel.storeIntegers(additions)); 
 	}
@@ -632,11 +755,8 @@ public class MotifModel
 		}
 		
 		// * size of the subbed graph under the binomial compressor
-		double n = subbedSize;
-		double t = (n * n - n)/2;
-		
-		bits.add("subbed", Functions.prefix((int)n) + Functions.log2(t) + log2Choose(subbedLinks, t));
-		
+		bits.add("subbed", ERSimpleModel.undirected(subbedSize, subbedLinks, true));
+				
 		List<Integer> additions = new ArrayList<Integer>(graph.size());
 		for(Pair<Integer, Integer> token : nodeToInstance.tokens())
 			additions.add((int)nodeToInstance.frequency(token) - 1);
@@ -675,8 +795,7 @@ public class MotifModel
 		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
 		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
 		
-		if(occurrences.size() == 0)
-			bits.print(System.out);
+		// bits.print(System.out);
 		
 		return bits.total();
 	}
@@ -699,6 +818,122 @@ public class MotifModel
 		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size(); 
 		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
 		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
+				
+		// bits.print(System.out);
+
+		return bits.total();
+	}
+	
+	/**
+	 * A version of the EL model that loops only over the instances. It requires 
+	 * the degrees of the graph to be given.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param resetWiring
+	 * @return
+	 */
+	public static double sizeEL(DGraph<?> graph, List<D> degrees, DGraph<?> sub,
+			List<List<Integer>> occurrences, boolean resetWiring)
+	{		
+		FrequencyModel<String> bits = new FrequencyModel<String>();
+		
+		bits.add("sub", elModel.codelength(sub));
+
+		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
+		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
+		
+		List<D> sDegrees = subbedDegrees(graph, degrees, occurrences, multiEdges, rewiring);
+		
+		// * store the template graph (as a simple graph) 
+		bits.add("subbed", EdgeListModel.directed(sDegrees, Prior.COMPLETE));
+		
+		// * store the multi-edges
+		// - We are storing, for each link, the number of additional edges required
+		//   (so everything's - 1)
+		double mBits = 0.0;
+		int max = (int)multiEdges.frequency(multiEdges.maxToken());
+		mBits += Functions.prefix(max - 1);
+		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
+		
+		// - loop over all rewired edges
+		for(Pair<Integer, Integer> token : multiEdges.tokens())
+			mBits += model.encode((int)multiEdges.frequency(token) - 1);
+		
+		bits.add("multi-edges", mBits);
+		
+		// * Store the rewiring information
+		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
+		
+		// * Store the insertion order, to preserve the precise ordering of the
+		//   nodes in the data
+		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+		
+		assert(sDegrees.size() == subbedSize);
+		
+		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
+		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
+				
+		// bits.print(System.out);
+		
+		return bits.total();
+	}	
+	
+	/**
+	 * A version of the EL model that loops only over the instances. It requires 
+	 * the degrees of the graph to be given.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param resetWiring
+	 * @return
+	 */
+	public static double sizeEL(UGraph<?> graph, List<Integer> degrees, UGraph<?> sub,
+			List<List<Integer>> occurrences, boolean resetWiring)
+	{		
+		FrequencyModel<String> bits = new FrequencyModel<String>();
+		
+		bits.add("sub", elModel.codelength(sub));
+
+		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
+		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
+		
+		List<Integer> sDegrees = subbedDegrees(graph, degrees, occurrences, multiEdges, rewiring);
+		
+		// * store the template graph (as a simple graph) 
+		bits.add("subbed", EdgeListModel.undirected(sDegrees, Prior.COMPLETE));
+		
+		// * store the multi-edges
+		// - We are storing, for each link, the number of additional edges required
+		//   (so everything's - 1)
+		double mBits = 0.0;
+		int max = (int)multiEdges.frequency(multiEdges.maxToken());
+		mBits += Functions.prefix(max - 1);
+		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
+		
+		// - first loop over all rewired edges
+		for(Pair<Integer, Integer> token : multiEdges.tokens())
+			mBits += model.encode((int)multiEdges.frequency(token) - 1);
+
+		bits.add("multi-edges", mBits);
+		
+		// * Store the rewiring information
+		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
+		
+		// * Store the insertion order, to preserve the precise ordering of the
+		//   nodes in the data
+		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+		
+		assert(sDegrees.size() == subbedSize);
+		
+		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
+		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
+				
+		// bits.print(System.out);
 		
 		return bits.total();
 	}
@@ -928,5 +1163,383 @@ public class MotifModel
 			motifNodes.add(node.index());
 
 		return copy;
+	}
+	
+	/**
+	 * Computes the degree sequence of the template graph. This method loops only 
+	 * over the list of occurrences, making it faster for large graphs with 
+	 * few occurrences.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param multiEdges An empty frequencymodel receiving how often certain edges in 
+	 * the template graph should be repeated (one occurrence in the fm no repeats). 
+	 * For performance reasons, the actual indices refer to the old graph, not 
+	 * the template graph. 
+	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
+	 * @return
+	 */
+	public static List<Integer> subbedDegrees(
+			UGraph<?> graph, List<Integer> degrees, 
+			List<List<Integer>> occurrences,
+			FrequencyModel<Pair<Integer, Integer>> multiEdges,
+			List<List<Integer>> rewiring)
+	{
+
+		List<Integer> subbedDegrees = new ArrayList<Integer>(degrees);
+		
+		// * Which nodes have been mapped to which instance node 
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+		// * Links that have been rewired. We store the old link (ie. the left 
+		//   and right indices in the original graph). 
+		Set<Pair<Integer, Integer>> rewLinks = 
+				new LinkedHashSet<Pair<Integer, Integer>>();
+		
+		for(List<Integer> occurrence : occurrences)
+		{	
+
+			List<Integer> rw = new LinkedList<Integer>(); 
+			// * Remove the occurrence (first node becomes instance node)
+			for(int index : occurrence.subList(1, occurrence.size()))
+				subbedDegrees.set(index, -1);
+			subbedDegrees.set(occurrence.get(0), 0);
+
+			for(int index : occurrence)
+				map.put(index, occurrence.get(0));
+			
+			// * Remove all links linking into an occurrence
+			for(int i : series(occurrence.size()))
+			{
+				int index = occurrence.get(i);
+				for(UNode<?> node : graph.get(index).neighbors())
+					if(! occurrence.contains(node.index()))
+					{		
+						subbedDegrees.set(node.index(), 
+							subbedDegrees.get(node.index()) - 1);
+						
+						rewLinks.add(ordered(index, node.index()));
+						
+						rw.add(i);						
+					}
+			}
+				
+			rewiring.add(rw);
+		}
+		
+		// * set occurrence nodes back to 0
+		for(List<Integer> occurrence : occurrences)
+			subbedDegrees.set(occurrence.get(0), 0);
+				
+		// * convert the rewritten links to new indices, and build a 
+		//  frequencymodel 
+		for(Pair<Integer, Integer> link : rewLinks)
+		{
+			int f = link.first(), s = link.second();
+			int a = map.containsKey(f) ? map.get(f) : f;
+			int b = map.containsKey(s) ? map.get(s) : s;
+			
+			multiEdges.add(ordered(a, b));
+		}
+		
+		// * Add each rewritten link _once_
+		for(Pair<Integer, Integer> link : multiEdges.tokens())
+		{
+			subbedDegrees.set(link.first(),  subbedDegrees.get(link.first())  + 1);
+			subbedDegrees.set(link.second(), subbedDegrees.get(link.second()) + 1);
+		}
+						
+		List<Integer> res = new ArrayList<Integer>(
+			graph.size() - occurrences.size() * (occurrences.get(0).size() - 1));
+		for(int degree : subbedDegrees)
+			if(degree >= 0)
+				res.add(degree);
+
+		return res;
+	}
+	
+	/**
+	 * Computes the degree sequence of the template graph. This method loops only 
+	 * over the list of occurrences, making it faster for large graphs with 
+	 * few occurrences.
+	 * 
+	 * @param graph
+	 * @param degrees
+	 * @param sub
+	 * @param occurrences
+	 * @param multiEdges An empty frequencymodel receiving how often certain edges in 
+	 * the template graph should be repeated (one occurrence in the fm no repeats). 
+	 * For performance reasons, the actual indices refer to the old graph, not 
+	 * the template graph. 
+	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
+	 * @return
+	 */
+	public static List<D> subbedDegrees(
+			DGraph<?> graph, List<D> degrees, 
+			List<List<Integer>> occurrences,
+			FrequencyModel<Pair<Integer, Integer>> multiEdges,
+			List<List<Integer>> rewiring)
+	{
+	
+		List<D> subbedDegrees = new ArrayList<D>(degrees.size());
+		for(D degree : degrees)
+			subbedDegrees.add(new D(degree.in(), degree.out()));
+		
+		// * Which nodes have been mapped to which instance node 
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+		// * Links that have been rewired. We store the old link (ie. the left 
+		//   and right indices in the original graph). 
+		Set<Pair<Integer, Integer>> rewLinks = 
+				new LinkedHashSet<Pair<Integer, Integer>>();
+		
+		for(List<Integer> occurrence : occurrences)
+		{	
+	
+			List<Integer> rw = new LinkedList<Integer>(); 
+			// * Remove the occurrence (first node becomes instance node)
+			for(int index : occurrence.subList(1, occurrence.size()))
+				subbedDegrees.set(index, null);
+			subbedDegrees.set(occurrence.get(0), new D(0, 0));
+	
+			for(int index : occurrence)
+				map.put(index, occurrence.get(0));
+			
+			// * Remove all links linking into an occurrence
+			for(int i : series(occurrence.size()))
+			{
+				int index = occurrence.get(i);
+				for(DNode<?> node : graph.get(index).out())
+					if(! occurrence.contains(node.index()))
+					{		
+						D old = subbedDegrees.get(node.index());
+						if(old != null)
+							subbedDegrees.set(node.index(), new D(old.in() - 1, old.out()));
+						
+						rewLinks.add(Pair.p(index, node.index()));
+						
+						rw.add(i);						
+					}
+				
+				for(DNode<?> node : graph.get(index).in())
+					if(! occurrence.contains(node.index()))
+					{		
+						D old = subbedDegrees.get(node.index());
+						if(old != null)
+							subbedDegrees.set(node.index(), new D(old.in(), old.out() - 1));
+							
+						rewLinks.add(Pair.p(node.index(), index));
+						
+						rw.add(i);						
+					}
+			}
+				
+			rewiring.add(rw);
+		}
+		
+		// * set occurrence nodes back to 0
+		for(List<Integer> occurrence : occurrences)
+			subbedDegrees.set(occurrence.get(0), new D(0, 0));
+				
+		// * convert the rewritten links to new indices, and build a 
+		//  frequencymodel 
+		for(Pair<Integer, Integer> link : rewLinks)
+		{
+			int f = link.first(), s = link.second();
+			int a = map.containsKey(f) ? map.get(f) : f;
+			int b = map.containsKey(s) ? map.get(s) : s;
+			
+			multiEdges.add(Pair.p(a, b));
+		}
+		
+		// * Add each rewritten link _once_
+		for(Pair<Integer, Integer> link : multiEdges.tokens())
+		{
+			D old;
+			old = subbedDegrees.get(link.first());
+			subbedDegrees.set(link.first(), new D(old.in(), old.out() + 1));
+			
+			old = subbedDegrees.get(link.second());
+			subbedDegrees.set(link.second(), new D(old.in() + 1, old.out()));
+		}
+						
+		List<D> res = new ArrayList<D>(
+			graph.size() - occurrences.size() * (occurrences.get(0).size() - 1));
+		
+		for(D degree : subbedDegrees)
+			if(degree != null)
+				res.add(degree);
+	
+	
+		return res;
+	}
+
+
+	/**
+	 * Computes the size and number of links in the template graph, by looping 
+	 * only over the instances. This method should be fast for large graphs with
+	 * few instances
+	 * 
+	 * @param graph
+	 * @param sub
+	 * @param occurrences
+	 * @param multiEdges An empty frequencymodel receiving how often certain edges in 
+	 * the template graph should be repeated (one occurrence in the fm no repeats). 
+	 * For performance reasons, the actual indices refer to the old graph, not 
+	 * the template graph. 
+	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
+	 * @return
+	 */
+	public static Pair<Integer, Integer> subbedERInstances(
+			UGraph<?> graph, UGraph<?> sub, List<List<Integer>> occurrences,
+			FrequencyModel<Pair<Integer, Integer>> multiEdges,
+			List<List<Integer>> rewiring)
+	{
+		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
+		// - we still need to remove multiple links from subbedNumLinks
+	
+		// * Which nodes have been mapped to which instance node 
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+		// * Links that have been rewired. We store the old link (ie. the left 
+		//   and right indices in the original graph). 
+		Set<Pair<Integer, Integer>> rewLinks = 
+				new LinkedHashSet<Pair<Integer, Integer>>();
+		
+		for(List<Integer> occurrence : occurrences)
+		{	
+			List<Integer> rw = new LinkedList<Integer>(); 
+			for(int index : occurrence)
+				map.put(index, occurrence.get(0));
+			
+			// * Remove all links linking into an occurrence
+			for(int i : series(occurrence.size()))
+			{
+				int index = occurrence.get(i);
+				for(UNode<?> node : graph.get(index).neighbors())
+					if(! occurrence.contains(node.index()))
+					{		
+						rewLinks.add(ordered(index, node.index()));
+						rw.add(i);						
+					}
+			}
+				
+			rewiring.add(rw);
+		}
+		
+		subbedNumLinks -= rewLinks.size();
+				
+		// * convert the rewritten links to new indices, and build a 
+		//  frequencymodel 
+		for(Pair<Integer, Integer> link : rewLinks)
+		{
+			int f = link.first(), s = link.second();
+			int a = map.containsKey(f) ? map.get(f) : f;
+			int b = map.containsKey(s) ? map.get(s) : s;
+			
+			multiEdges.add(ordered(a, b));
+		}
+		
+		// * Add each rewritten link _once_
+		for(Pair<Integer, Integer> link : multiEdges.tokens())
+			subbedNumLinks ++;
+
+		return Pair.p(subbedSize, subbedNumLinks);
+	}
+	
+	/**
+	 * Computes the size and number of links in the template graph, by looping 
+	 * only over the instances. This method should be fast for large graphs with
+	 * few instances
+	 * 
+	 * @param graph
+	 * @param sub
+	 * @param occurrences
+	 * @param multiEdges An empty frequencymodel receiving how often certain edges in 
+	 * the template graph should be repeated (one occurrence in the fm no repeats). 
+	 * For performance reasons, the actual indices refer to the old graph, not 
+	 * the template graph. 
+	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
+	 * @return
+	 */
+	public static Pair<Integer, Integer> subbedERInstances(
+			DGraph<?> graph, DGraph<?> sub, List<List<Integer>> occurrences,
+			FrequencyModel<Pair<Integer, Integer>> multiEdges,
+			List<List<Integer>> rewiring)
+	{
+		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
+		// - we still need to remove multiple links from subbedNumLinks
+	
+		// * Which nodes have been mapped to which instance node 
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+		// * Links that have been rewired. We store the old link (ie. the left 
+		//   and right indices in the original graph). 
+		Set<Pair<Integer, Integer>> rewLinks = 
+				new LinkedHashSet<Pair<Integer, Integer>>();
+		
+		for(List<Integer> occurrence : occurrences)
+		{	
+			List<Integer> rw = new LinkedList<Integer>(); 
+			for(int index : occurrence)
+				map.put(index, occurrence.get(0));
+			
+			// * Remove all links linking into an occurrence
+			for(int i : series(occurrence.size()))
+			{
+				int index = occurrence.get(i);
+				for(DNode<?> node : graph.get(index).out())
+					if(! occurrence.contains(node.index()))
+					{		
+						rewLinks.add(p(index, node.index()));
+						
+						rw.add(i);						
+					}
+				
+				for(DNode<?> node : graph.get(index).in())
+					if(! occurrence.contains(node.index()))
+					{		
+						rewLinks.add(p(node.index(), index));
+						
+						rw.add(i);						
+					}
+			}
+				
+			rewiring.add(rw);
+		}
+		
+		subbedNumLinks -= rewLinks.size();
+				
+		// * convert the rewritten links to new indices, and build a 
+		//  frequencymodel 
+		for(Pair<Integer, Integer> link : rewLinks)
+		{
+			int f = link.first(), s = link.second();
+			int a = map.containsKey(f) ? map.get(f) : f;
+			int b = map.containsKey(s) ? map.get(s) : s;
+						
+			multiEdges.add(p(a, b));
+		}
+				
+		// * Add each rewritten link _once_
+		for(Pair<Integer, Integer> link : multiEdges.tokens())
+			subbedNumLinks ++;
+
+		return Pair.p(subbedSize, subbedNumLinks);
+	}
+	
+	/**
+	 * Returns a pair of ordered integer (ie. the smallest integer always takes 
+	 * the first position).
+	 *  
+	 * @param i1
+	 * @param i2
+	 * @return
+	 */
+	private static Pair<Integer, Integer> ordered(int i1, int i2) 
+	{
+		if(i1 <= i2)
+			return new Pair<Integer, Integer>(i1, i2);
+		return new Pair<Integer, Integer>(i2, i1);
 	}
 }

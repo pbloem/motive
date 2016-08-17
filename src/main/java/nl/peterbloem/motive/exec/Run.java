@@ -55,9 +55,19 @@ public class Run {
 	private static int threads = Global.numThreads();
 	
 	@Option(
+			name="--fast.graphloop",
+			usage="Loop over the graph instead of the instances when computing the score. A little faster when there are many instances, but a lot slower when there are few.")
+	private static boolean graphLoop = false;
+	
+	@Option(
 			name="--full.depth",
 			usage="The search depth for the DS model.")
 	private static int dsDepth = 3;
+	
+	@Option(
+			name="--full.mix",
+			usage="What proportion of available cores to use for motif computation (with the rest used for sampling). Changing this parameter won't affect the end result, but it might lead to better utilitzation of the available cores. If 1.0, the motif scores are computed one by one, sequentially, and the free cores are used to sample for the DS model. If 0.0, the motif scores are computed in parallel, and sampling is done single-threaded.")
+	private static double mix = 0.4;
 	
 	@Option(name="--help", usage="Print usage information.", aliases={"-h"}, help=true)
 	private static boolean help = false;
@@ -190,6 +200,7 @@ public class Run {
     		large.motifMaxSize = maxSize;
     		large.maxMotifs = maxMotifs;
     		large.motifSamples = samples;
+    		large.graphLoop = graphLoop;
     		
        		Global.log().info("Starting experiment.");
     		Functions.tic();
@@ -235,6 +246,7 @@ public class Run {
     		full.maxMotifs = maxMotifs;
     		full.motifSamples = samples;
     		full.betaSearchDepth = dsDepth;
+    		full.mix = mix;
     		
        		Global.log().info("Starting experiment.");
     		Functions.tic();

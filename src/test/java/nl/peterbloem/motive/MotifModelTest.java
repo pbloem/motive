@@ -2,6 +2,7 @@ package nl.peterbloem.motive;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Arrays.asList;
 import static nl.peterbloem.kit.Functions.log2Choose;
 import static nl.peterbloem.kit.Functions.log2Factorial;
 import static nl.peterbloem.kit.Functions.prefix;
@@ -13,9 +14,11 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -532,4 +535,280 @@ public class MotifModelTest
 		
 		MotifModel.sizeEL(graph, sub, ex.occurrences(sub), true);
 	}
+	
+	@Test
+	public void instanceLoopTest()
+	{
+		UGraph<String> graph = new MapUTGraph<String, String>();
+		
+		UNode<String> a = graph.add("x");
+		UNode<String> b = graph.add("x");		
+		UNode<String> c = graph.add("x");
+		UNode<String> d = graph.add("x");
+		UNode<String> e = graph.add("x");		
+		UNode<String> f = graph.add("x");
+		
+		a.connect(b);
+		a.connect(c);
+		b.connect(c);
+		b.connect(e);
+		c.connect(d);
+		c.connect(e);
+		d.connect(e);
+		d.connect(f);
+		e.connect(f);
+		
+		UGraph<String> sub = new MapUTGraph<String, String>();
+		
+		UNode<String> x = sub.add("x");
+		UNode<String> y = sub.add("x");		
+		UNode<String> z = sub.add("x");
+
+		x.connect(y);
+		y.connect(z);
+		z.connect(x);
+		
+		List<List<Integer>> occurrences = asList(asList(0, 1, 2), asList(3, 4, 5));
+		List<Integer> degrees = Graphs.degrees(graph);
+
+		assertEquals(asList(1, 1), 
+				MotifModel.subbedDegrees(graph, degrees, occurrences, 
+					new FrequencyModel<Pair<Integer, Integer>>(),
+					new LinkedList<List<Integer>>()));
+			
+		double bitsOld = MotifModel.sizeEL(graph, sub, occurrences, true);
+		double bitsNew = MotifModel.sizeEL(graph, degrees, sub, occurrences, true);
+		
+		assertEquals(bitsOld, bitsNew, 0.000000000000001);
+	}
+	
+	@Test
+	public void instanceLoopTest2()
+	{
+		UGraph<String> graph = new MapUTGraph<String, String>();
+		
+		UNode<String> a = graph.add("x");
+		UNode<String> b = graph.add("x");		
+		UNode<String> c = graph.add("x");
+		UNode<String> d = graph.add("x");
+		UNode<String> e = graph.add("x");		
+		UNode<String> f = graph.add("x");
+		
+		UNode<String> g = graph.add("x");
+		UNode<String> h = graph.add("x");
+		UNode<String> i = graph.add("x");
+		
+		a.connect(b);
+		a.connect(c);
+		b.connect(c);
+		b.connect(e);
+		c.connect(d);
+		c.connect(e);
+		d.connect(e);
+		d.connect(f);
+		e.connect(f);
+		
+		f.connect(g);
+		g.connect(h);
+		h.connect(i);
+		i.connect(f);
+		
+		UGraph<String> sub = new MapUTGraph<String, String>();
+		
+		UNode<String> x = sub.add("x");
+		UNode<String> y = sub.add("x");		
+		UNode<String> z = sub.add("x");
+
+		x.connect(y);
+		y.connect(z);
+		z.connect(x);
+		
+		List<List<Integer>> occurrences = asList(asList(0, 1, 2), asList(3, 4, 5));
+		List<Integer> degrees = Graphs.degrees(graph);
+		System.out.println(degrees);
+
+		assertEquals(asList(1, 3, 2, 2, 2), 
+				MotifModel.subbedDegrees(graph, degrees, occurrences, 
+					new FrequencyModel<Pair<Integer, Integer>>(),
+					new LinkedList<List<Integer>>()));
+			
+		double bitsOld = MotifModel.sizeEL(graph, sub, occurrences, true);
+		double bitsNew = MotifModel.sizeEL(graph, degrees, sub, occurrences, true);
+		
+		assertEquals(bitsOld, bitsNew, 0.000000000000001);
+	}
+	
+	@Test
+	public void instanceLoopTest3()
+	{		
+		for(int i : series(20))
+		{
+			UGraph<String> graph = RandomGraphs.random(100, 200);
+		
+			UPlainMotifExtractor<String> ex = new UPlainMotifExtractor<String>(graph, 100, 3, 4, 1);
+			List<Integer> degrees = Graphs.degrees(graph);
+	
+			for(UGraph<String> sub : ex.subgraphs())
+			{
+				double sizeSlow = MotifModel.size(graph, sub, ex.occurrences(sub), new EdgeListModel(Prior.COMPLETE), true);
+				double sizeOld = MotifModel.sizeEL(graph, sub, ex.occurrences(sub), true);
+				double sizeNew = MotifModel.sizeEL(graph, degrees, sub, ex.occurrences(sub), true);
+	
+				
+				assertEquals(sizeOld, sizeNew, 0.000001);
+				assertEquals(sizeSlow, sizeNew, 0.000001);
+	
+			}
+		}
+	}
+	
+	@Test
+	public void instanceLoopTestDirected()
+	{		
+		for(int i : series(1))
+		{
+			DGraph<String> graph = RandomGraphs.randomDirected(10, 10);
+		
+			DPlainMotifExtractor<String> ex = new DPlainMotifExtractor<String>(graph, 100, 3, 4, 1);
+			
+			List<D> degrees = DSequenceEstimator.sequence(graph); 
+	
+			for(DGraph<String> sub : ex.subgraphs())
+			{
+				System.out.println("sub " + sub + ", " + ex.occurrences(sub).size() + " occurrences");
+				double sizeSlow = MotifModel.size(graph, sub, ex.occurrences(sub), new EdgeListModel(Prior.COMPLETE), true);
+				double sizeOld = MotifModel.sizeEL(graph, sub, ex.occurrences(sub), true);
+				double sizeNew = MotifModel.sizeEL(graph, degrees, sub, ex.occurrences(sub), true);
+	
+				assertEquals(sizeOld, sizeNew, 0.000001);
+				assertEquals(sizeSlow, sizeNew, 0.000001);
+	
+			}
+		}
+	}
+	
+	
+//	@Test
+	public void instanceLoopTestTiming()
+	{		
+		UGraph<String> graph = RandomGraphs.randomFast(100000, 2000000);
+		System.out.println("graph generated.");
+		
+		UPlainMotifExtractor<String> ex = new UPlainMotifExtractor<String>(graph, 1000000, 3, 6, 1);
+		List<Integer> degrees = Graphs.degrees(graph);
+		
+		for(UGraph<String> sub : ex.subgraphs())
+		{
+			System.out.println(ex.occurrences(sub).size() + " occurrences:");
+			double tOld, tNew;
+			tic();
+			double sizeOld = MotifModel.sizeER(graph, sub, ex.occurrences(sub), true);
+			tOld = toc();
+			
+			tic();
+			double sizeNew = MotifModel.sizeERInst(graph, sub, ex.occurrences(sub), true);
+			tNew = toc();
+			
+			System.out.println("  old: " + tOld + " seconds");
+			System.out.println("  new: " + tNew + " seconds");
+
+		}
+	}
+	
+//	@Test
+	public void instanceLoopDirectedTiming()
+	{		
+		DGraph<String> graph = RandomGraphs.randomDirectedFast(100000, 2000000);
+		System.out.println("graph generated.");
+		
+		DPlainMotifExtractor<String> ex = new DPlainMotifExtractor<String>(graph, 100000, 3, 6, 1);
+		List<D> degrees = DSequenceEstimator.sequence(graph);
+		
+		for(DGraph<String> sub : ex.subgraphs())
+		{
+			System.out.println(ex.occurrences(sub).size() + " occurrences:");
+			double tOld, tNew;
+			tic();
+			double sizeOld = MotifModel.sizeER(graph, sub, ex.occurrences(sub), true);
+			
+			tOld = toc();
+			
+			tic();
+			double sizeNew = MotifModel.sizeERInst(graph, sub, ex.occurrences(sub), true);
+			tNew = toc();
+			
+			System.out.println("  old: " + tOld + " seconds");
+			System.out.println("  new: " + tNew + " seconds");
+
+		}
+	}
+	
+	public void instanceLoopTestTiming2()
+	{		
+		UGraph<String> graph = RandomGraphs.randomFast(10000, 100000);
+		System.out.println("graph generated.");
+		
+		UPlainMotifExtractor<String> ex = new UPlainMotifExtractor<String>(graph, 100000, 3, 5, 1);
+		List<Integer> degrees = Graphs.degrees(graph);
+		
+		UGraph<String> sub = ex.subgraphs().get(0);
+
+		tic();
+		for(int i : series(50))
+			MotifModel.sizeEL(graph, degrees, sub, ex.occurrences(sub), true);
+		System.out.println(toc() + " seconds.");
+		
+	}
+	
+	
+	@Test
+	public void instanceLoopTestERU()
+	{		
+		for(int i : series(20))
+		{
+			UGraph<String> graph = RandomGraphs.random(100, 200);
+		
+			UPlainMotifExtractor<String> ex = new UPlainMotifExtractor<String>(graph, 100, 3, 4, 1);
+			List<Integer> degrees = Graphs.degrees(graph);
+	
+			for(UGraph<String> sub : ex.subgraphs())
+			{
+				double sizeSlow = MotifModel.size(graph, sub, ex.occurrences(sub), new ERSimpleModel(true), true);
+				double sizeOld  = MotifModel.sizeER(graph, sub, ex.occurrences(sub), true);
+				double sizeNew  = MotifModel.sizeERInst(graph, sub, ex.occurrences(sub), true);
+	
+				System.out.println(sizeSlow + " " + sizeOld + " " + sizeNew);
+				
+				assertEquals(sizeOld, sizeNew, 0.000001);
+				assertEquals(sizeSlow, sizeNew, 0.000001);
+	
+			}
+		}
+	}
+	
+	
+	@Test
+	public void instanceLoopTestERD()
+	{		
+		for(int i : series(20))
+		{
+			DGraph<String> graph = RandomGraphs.randomDirectedFast(100, 200);
+		
+			DPlainMotifExtractor<String> ex = new DPlainMotifExtractor<String>(graph, 100, 3, 4, 1);
+	
+			for(DGraph<String> sub : ex.subgraphs())
+			{
+				double sizeSlow = MotifModel.size(graph, sub, ex.occurrences(sub), new ERSimpleModel(true), true);
+				double sizeOld  = MotifModel.sizeER(graph, sub, ex.occurrences(sub), true);
+				double sizeNew  = MotifModel.sizeERInst(graph, sub, ex.occurrences(sub), true);
+	
+				System.out.println(sizeSlow + " " + sizeOld + " " + sizeNew);
+				
+				assertEquals(sizeOld, sizeNew, 0.000001);
+				assertEquals(sizeSlow, sizeNew, 0.000001);
+	
+			}
+		}
+	}
+	
 }

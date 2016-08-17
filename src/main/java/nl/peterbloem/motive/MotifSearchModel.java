@@ -8,6 +8,8 @@ import java.util.Map;
 import org.nodes.DGraph;
 import org.nodes.Graph;
 import org.nodes.UGraph;
+import org.nodes.models.DSequenceEstimator;
+import static org.nodes.models.DSequenceEstimator.D;
 import org.nodes.models.StructureModel;
 import org.nodes.util.Fibonacci;
 
@@ -108,6 +110,74 @@ public class MotifSearchModel
 		
 		FindPhi<Graph<?>> find 
 			= new FindPhi<Graph<?>>(graph, sub, occurrences, resetWiring, depth, function);
+		
+		return find.size();
+	}
+	
+	public static double sizeELInst(UGraph<?> graph, final List<Integer> degrees, UGraph<?> sub, List<List<Integer>> occurrences, boolean resetWiring, int depth)
+	{
+		Function<UGraph<?>> function = new Function<UGraph<?>>()
+		{
+			public double size(UGraph<?> graph, UGraph<?> sub,
+					List<List<Integer>> occurrences, boolean resetWiring)
+			{
+				return MotifModel.sizeEL(graph, degrees, sub, occurrences, resetWiring);
+			}
+		};
+		
+		FindPhi<UGraph<?>> find 
+			= new FindPhi<UGraph<?>>(graph, sub, occurrences, resetWiring, depth, function);
+		
+		return find.size();
+	}
+	
+	public static double sizeELInst(DGraph<?> graph, final List<D> degrees, DGraph<?> sub, List<List<Integer>> occurrences, boolean resetWiring, int depth)
+	{
+		Function<DGraph<?>> function = new Function<DGraph<?>>()
+		{
+			public double size(DGraph<?> graph, DGraph<?> sub,
+					List<List<Integer>> occurrences, boolean resetWiring)
+			{
+				return MotifModel.sizeEL(graph, degrees, sub, occurrences, resetWiring);
+			}
+		};
+		
+		FindPhi<DGraph<?>> find 
+			= new FindPhi<DGraph<?>>(graph, sub, occurrences, resetWiring, depth, function);
+		
+		return find.size();
+	}
+	
+	public static double sizeERInst(UGraph<?> graph, UGraph<?> sub, List<List<Integer>> occurrences, boolean resetWiring, int depth)
+	{
+		Function<UGraph<?>> function = new Function<UGraph<?>>()
+		{
+			public double size(UGraph<?> graph, UGraph<?> sub,
+					List<List<Integer>> occurrences, boolean resetWiring)
+			{
+				return MotifModel.sizeERInst(graph,sub, occurrences, resetWiring);
+			}
+		};
+		
+		FindPhi<UGraph<?>> find 
+			= new FindPhi<UGraph<?>>(graph, sub, occurrences, resetWiring, depth, function);
+		
+		return find.size();
+	}
+	
+	public static double sizeERInst(DGraph<?> graph, DGraph<?> sub, List<List<Integer>> occurrences, boolean resetWiring, int depth)
+	{
+		Function<DGraph<?>> function = new Function<DGraph<?>>()
+		{
+			public double size(DGraph<?> graph, DGraph<?> sub,
+					List<List<Integer>> occurrences, boolean resetWiring)
+			{
+				return MotifModel.sizeERInst(graph, sub, occurrences, resetWiring);
+			}
+		};
+		
+		FindPhi<DGraph<?>> find 
+			= new FindPhi<DGraph<?>>(graph, sub, occurrences, resetWiring, depth, function);
 		
 		return find.size();
 	}

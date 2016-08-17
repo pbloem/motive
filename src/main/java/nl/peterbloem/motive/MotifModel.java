@@ -1187,6 +1187,8 @@ public class MotifModel
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
+		if(occurrences.isEmpty())
+			return degrees;
 
 		List<Integer> subbedDegrees = new ArrayList<Integer>(degrees);
 		
@@ -1281,6 +1283,8 @@ public class MotifModel
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
+		if(occurrences.isEmpty())
+			return degrees;
 	
 		List<D> subbedDegrees = new ArrayList<D>(degrees.size());
 		for(D degree : degrees)
@@ -1395,6 +1399,9 @@ public class MotifModel
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
+		if(occurrences.isEmpty())
+			return p(graph.size(), graph.numLinks());
+		
 		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
 		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
 		// - we still need to remove multiple links from subbedNumLinks
@@ -1467,6 +1474,9 @@ public class MotifModel
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
+		if(occurrences.isEmpty())
+			return p(graph.size(), graph.numLinks());
+		
 		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
 		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
 		// - we still need to remove multiple links from subbedNumLinks

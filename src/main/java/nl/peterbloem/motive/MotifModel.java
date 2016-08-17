@@ -546,16 +546,7 @@ public class MotifModel
 		// * store the multi-edges
 		// - We are storing, for each link, the number of additional edges required
 		//   (so everything's - 1)
-		double mBits = 0.0;
-		int max = (int)multiEdges.frequency(multiEdges.maxToken());
-		mBits += Functions.prefix(max - 1);
-		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
-		
-		// - first loop over all rewired edges
-		for(Pair<Integer, Integer> token : multiEdges.tokens())
-			mBits += model.encode((int)multiEdges.frequency(token) - 1);
-
-		bits.add("multi-edges", mBits);
+		bits.add("multi-edges", multiEdges(multiEdges));
 		
 		// * Store the rewiring information
 		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
@@ -601,16 +592,7 @@ public class MotifModel
 		// * store the multi-edges
 		// - We are storing, for each link, the number of additional edges required
 		//   (so everything's - 1)
-		double mBits = 0.0;
-		int max = (int)multiEdges.frequency(multiEdges.maxToken());
-		mBits += Functions.prefix(max - 1);
-		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
-		
-		// - loop over all rewired edges
-		for(Pair<Integer, Integer> token : multiEdges.tokens())
-			mBits += model.encode((int)multiEdges.frequency(token) - 1);
-		
-		bits.add("multi-edges", mBits);
+		bits.add("multi-edges", multiEdges(multiEdges));
 		
 		// * Store the rewiring information
 		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
@@ -857,18 +839,7 @@ public class MotifModel
 		bits.add("subbed", EdgeListModel.directed(sDegrees, Prior.COMPLETE));
 		
 		// * store the multi-edges
-		// - We are storing, for each link, the number of additional edges required
-		//   (so everything's - 1)
-		double mBits = 0.0;
-		int max = (int)multiEdges.frequency(multiEdges.maxToken());
-		mBits += Functions.prefix(max - 1);
-		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
-		
-		// - loop over all rewired edges
-		for(Pair<Integer, Integer> token : multiEdges.tokens())
-			mBits += model.encode((int)multiEdges.frequency(token) - 1);
-		
-		bits.add("multi-edges", mBits);
+		bits.add("multi-edges", multiEdges(multiEdges));
 		
 		// * Store the rewiring information
 		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));
@@ -886,6 +857,27 @@ public class MotifModel
 		
 		return bits.total();
 	}	
+	
+	public static double multiEdges(FrequencyModel<Pair<Integer, Integer>> multiEdges)
+	{
+		// - We are storing, for each link, the number of _additional_ edges required
+		//   (so everything's - 1)
+	
+		if(multiEdges.tokens().isEmpty())
+			return Functions.prefix(0);
+		
+		double mBits = 0.0;
+		int max = (int)multiEdges.frequency(multiEdges.maxToken());
+
+		mBits += Functions.prefix(max - 1);
+		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
+
+		// - loop over all rewired edges
+		for(Pair<Integer, Integer> token : multiEdges.tokens())
+			mBits += model.encode((int)multiEdges.frequency(token) - 1);
+		
+		return mBits;
+	}
 	
 	/**
 	 * A version of the EL model that loops only over the instances. It requires 
@@ -914,18 +906,7 @@ public class MotifModel
 		bits.add("subbed", EdgeListModel.undirected(sDegrees, Prior.COMPLETE));
 		
 		// * store the multi-edges
-		// - We are storing, for each link, the number of additional edges required
-		//   (so everything's - 1)
-		double mBits = 0.0;
-		int max = (int)multiEdges.frequency(multiEdges.maxToken());
-		mBits += Functions.prefix(max - 1);
-		OnlineModel<Integer> model = new OnlineModel<Integer>(Series.series(0, max));
-		
-		// - first loop over all rewired edges
-		for(Pair<Integer, Integer> token : multiEdges.tokens())
-			mBits += model.encode((int)multiEdges.frequency(token) - 1);
-
-		bits.add("multi-edges", mBits);
+		bits.add("multi-edges", multiEdges(multiEdges));
 		
 		// * Store the rewiring information
 		bits.add("wiring", wiringBits(sub, rewiring, resetWiring));

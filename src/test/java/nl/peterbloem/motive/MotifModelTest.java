@@ -811,4 +811,28 @@ public class MotifModelTest
 		}
 	}
 	
+	
+	@Test
+	public void instanceLoopTestInfinities()
+	{		
+		for(int i : series(20))
+		{
+			DGraph<String> graph = RandomGraphs.randomDirectedFast(100, 200);
+		
+			DPlainMotifExtractor<String> ex = new DPlainMotifExtractor<String>(graph, 100, 3, 4, 1);
+			List<D> degrees = DSequenceEstimator.sequence(graph);
+	
+			for(DGraph<String> sub : ex.subgraphs())
+			{
+				List<List<Integer>> empty = Collections.emptyList();
+				double sizeEL  = MotifModel.sizeEL(graph, degrees, sub, empty, true);
+				double sizeER  = MotifModel.sizeERInst(graph, sub, empty, true);
+	
+				assertTrue(Double.isFinite(sizeEL));
+				assertTrue(Double.isFinite(sizeER));
+
+			}
+		}
+	}
+	
 }

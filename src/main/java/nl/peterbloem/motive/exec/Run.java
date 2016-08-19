@@ -9,6 +9,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nodes.DGraph;
+import org.nodes.DiskDGraph;
 import org.nodes.Graph;
 import org.nodes.compression.Functions;
 import org.nodes.data.Data;
@@ -58,6 +59,11 @@ public class Run {
 			name="--fast.graphloop",
 			usage="Loop over the graph instead of the instances when computing the score. A little faster when there are many instances, but a lot slower when there are few.")
 	private static boolean graphLoop = false;
+	
+	@Option(
+			name="--fast.disk",
+			usage="Use the disk to store the graph.  Slower, but uses very little memory. Supports graphs up to billions of links (disk space permitting).")
+	private static boolean useDisk = false;
 	
 	@Option(
 			name="--full.depth",
@@ -174,9 +180,13 @@ public class Run {
     		DGraph<String> data;
     		try {
 	    		if("edgelist".equals(filetype.toLowerCase().trim()))
-	    			data = Data.edgeListDirectedUnlabeledSimple(file);
-	    		else if ("gml".equals(filetype.toLowerCase().trim()))
 	    		{
+	    			data = useDisk ? DiskDGraph.fromFile(file, new File("./tmp/")) : Data.edgeListDirectedUnlabeledSimple(file);
+	    		} else if ("gml".equals(filetype.toLowerCase().trim()))
+	    		{
+	    			if(!useDisk)
+	    				throw new IllegalArgumentException("GML is not supported with mode fast.disk");
+	    			
 	    			Graph<String> graph = GML.read(file);
 	    			
 	    			if(! (graph instanceof DGraph<?>))
@@ -212,6 +222,14 @@ public class Run {
     		}
     		
     		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
+    		
+    		if(useDisk)
+    		{
+    			File dir = new File("./tmp/");
+    			for(File file : dir.listFiles())
+    				file.delete();
+    			dir.delete();
+    		}
     		
     	} else if ("full".equals(type.toLowerCase()))
     	{

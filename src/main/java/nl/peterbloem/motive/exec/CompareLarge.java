@@ -141,7 +141,6 @@ public class CompareLarge
 		final List<D> degrees = graphLoop ? null : DSequenceEstimator.sequence(data);
 
 		// * Sample for motifs, and collect the results
-		
 		DPlainMotifExtractor<String> ex 
 		= new DPlainMotifExtractor<String>(
 				(DGraph<String>)data, motifSamples, motifMinSize, motifMaxSize, minFreq);

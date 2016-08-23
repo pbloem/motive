@@ -199,7 +199,7 @@ public class Run {
 	    			
     			
     		} catch (IOException e) {
-				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").");
+				throw new IllegalArgumentException("There was a problem reading the input file ("+file+").", e);
 			}
     		
     		CompareLarge large = new CompareLarge();

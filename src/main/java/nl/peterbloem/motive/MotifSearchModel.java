@@ -227,7 +227,7 @@ public class MotifSearchModel
 			
 			find(0, to, 0);
 			
-			Global.log().info("Search finished. Samples taken: " + cache.size());
+			// Global.log().info("Search finished. Samples taken: " + cache.size());
 		}
 
 		public double size()
@@ -293,7 +293,7 @@ public class MotifSearchModel
 				double size = function.size(data, motif, occurrences.subList(0, Math.min(occurrences.size(), n)), resetWiring);
 				cache.put(n, size);
 				
-				Global.log().info("compression at " + n + " occurrences: " + size);
+				// Global.log().info("compression at " + n + " occurrences: " + size);
 				
 				return size;
 			}

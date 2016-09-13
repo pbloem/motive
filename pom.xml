@@ -58,13 +58,13 @@
     <dependency>
 	    <groupId>com.github.Data2Semantics</groupId>
 	    <artifactId>nodes</artifactId>
-	    <version>v0.1.11</version>
+	    <version>v0.1.13</version>
 	</dependency> 
-<!--    	<dependency> -->
+<!--    <dependency> -->
 <!--   		<groupId>data2semantics</groupId> -->
 <!--   		<artifactId>nodes</artifactId> -->
 <!--   		<version>0.0.1-SNAPSHOT</version> -->
-<!--   	</dependency>   -->
+<!--   	</dependency> -->
   </dependencies>
   
 	<repositories>

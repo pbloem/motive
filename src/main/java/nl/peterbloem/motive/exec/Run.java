@@ -14,21 +14,28 @@ import org.nodes.Graph;
 import org.nodes.compression.Functions;
 import org.nodes.data.Data;
 import org.nodes.data.GML;
+import org.nodes.data.RDF;
 
 import nl.peterbloem.kit.Global;
 
-public class Run {
-
+public class Run 
+{
 	
 	@Option(
 		name="--type",
-		usage="Selects the type of experiment, one of: synth (synthetic graph experiment), full (motif extraction with all null models), fast (skip the DS model)}.")
+		usage="Selects the type of experiment, one of: synth (synthetic graph experiment), full (motif extraction with all null models), fast (skip the DS model), preload (load a large graph into a db file), class (classification experiment).")
 	private static String type = "fast";
+	
+	@Option(
+			name="--preload.out",
+			usage="Output file.")
+	private static File outFile = new File("./graph.db");
 	
 	@Option(
 			name="--samples",
 			usage="Number of samples to take.")
 	private static int samples = 1000000;
+	
 	@Option(
 			name="--minsize",
 			usage="Minimum motif size in nodes (inclusive).")
@@ -43,10 +50,13 @@ public class Run {
 			usage="Maximum number of motifs to test.")
 	private static int maxMotifs = 100;
 	
-	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line). Multiple edges and self-loops are ignored.")
+	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line). Multiple edges and self-loops are ignored. If type is class, this should be an RDF file.")
 	private static File file;
 	
-	@Option(name="--filetype", usage="Filetype: edgelist or gml")
+	@Option(name="--class.table", usage="TSV file containing the classification experiment.")
+	private static File classTSV;
+	
+	@Option(name="--filetype", usage="Filetype: edgelist, gml or graph (ie. a file created with \"--type preload\")")
 	private static String filetype = "edgelist";
 	
 	@Option(name="--undirected", usage="If the input should be interpeted as undirected (only for edgelist files).")
@@ -103,6 +113,41 @@ public class Run {
 			usage="Maximum degree for an instance node.")
 	private static int synthMaxDegree = 5;
 	
+	@Option(
+			name="--class.prob",
+			usage="Fanmod probability of expanding a search tree node (1.0 enumerates all subgraphs, lower means a smaller sample, and lower runtime)")
+	private static double classProb = 0.5;
+	
+	@Option(
+			name="--class.hubs",
+			usage="Number of hubs to remove from the data (the more hubs removed, the smaller the instances become.")
+	private static int classHubs = 0;
+	
+	@Option(
+			name="--class.fanmodSamples",
+			usage="Number of samples from the null model in the FANMOD experiment.")
+	private static int classFMSamples = 1000;
+	
+	@Option(
+			name="--class.motiveSamples",
+			usage="Number of subgraphs to sample in the motive experiment.")
+	private static int classMotiveSamples = 1000000;
+	
+	@Option(
+			name="--class.depth",
+			usage="Depth to which to extract the instances.")
+	private static int classDepth = 2;
+	
+	@Option(
+			name="--class.mixingTime",
+			usage="Mixing time for the curveball sampling algorithm (ie. the number of steps taken in the markov chain for each sample).")
+	private static int classMixingTime = 10000;
+	
+	@Option(
+			name="--class.numInstances",
+			usage="The number of instances to use (samples from the total available)")
+	private static int classNumInstances = 100;
+	
 	/**
 	 * Main executable function
 	 * @param args
@@ -135,7 +180,51 @@ public class Run {
 		Global.setNumThreads(threads);
 		Global.log().info("Using " + Global.numThreads() + " concurrent threads");
     	
-    	if ("synth".equals(type.toLowerCase()))
+    	if ("class".equals(type.toLowerCase()))
+    	{
+    	
+    		ClassExperiment exp = new ClassExperiment();
+    		
+    		try {
+				exp.graph = RDF.readSimple(file);
+			} catch (IOException e) {
+				throw new RuntimeException("Could not read RDF input file.", e);
+			}
+    		
+    		try {
+    			exp.map = ClassExperiment.tsv(classTSV);
+			} catch (IOException e) {
+				throw new RuntimeException("Could not read TSV classification file.", e);
+			}	
+    		
+    		exp.prob = classProb;
+    		exp.hubsToRemove = classHubs;
+    		exp.samples = classFMSamples;
+    		exp.motiveSamples = classMotiveSamples;
+    		exp.instanceDepth = classDepth;
+    		exp.mixingTime = classMixingTime;
+    		exp.numInstances = classNumInstances;
+    		    		
+    		
+    	} else if ("preload".equals(type.toLowerCase()))
+    	{
+    		try 
+    		{    			
+    			File tmpDir = new File("./tmp/");
+    			tmpDir.mkdir();
+    			
+    			DiskDGraph graph = DiskDGraph.fromFile(file, tmpDir, outFile);
+    			graph.close();
+    			
+    			for(File file : tmpDir.listFiles())
+    				file.delete();
+    			tmpDir.delete();
+    		} catch(IOException e)
+    		{
+    			throw new RuntimeException("Something went wrong reading or writing files.", e);
+    		}
+    		
+    	} else if ("synth".equals(type.toLowerCase()))
     	{
     		Global.log().info("Experiment type: synthetic");
     		Synthetic synth = new Synthetic();
@@ -193,7 +282,10 @@ public class Run {
 	    				throw new IllegalArgumentException("Input file seems to describe an undirected graph. This is not (yet) supported for the fast mode.");
 	    			
 	    			data = (DGraph<String>) graph;
-	    		} else {
+	    		} else if("db".equals(filetype.toLowerCase().trim())) 
+	    		{
+	    			data = DiskDGraph.fromDB(file);
+    			} else {
 	    			throw new IllegalArgumentException("File type ("+filetype+") not recognized.");
 	    		}
 	    			

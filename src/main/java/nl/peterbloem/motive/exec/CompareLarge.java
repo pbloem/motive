@@ -289,7 +289,7 @@ public class CompareLarge
 			FileIO.python(new File("."), "scripts/plot.large.py");
 		} catch (Exception e)
 		{
-			System.out.println("Failed to run plot script. " + e);
+			Global.log().warning("Failed to run plot script. The script has been copied to the output directory.  (trace:" + e + ")");
 		}
 	}
 }

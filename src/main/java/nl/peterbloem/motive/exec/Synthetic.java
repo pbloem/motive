@@ -125,7 +125,7 @@ public class Synthetic
 			FileIO.python(new File("."), "scripts/plot.synthetic.py");
 		} catch (Exception e)
 		{
-			throw new RuntimeException("Failed to run plot script. ", e);
+			Global.log().warning("Failed to run plot script. The script has been copied to the output directory.  (trace:" + e + ")");
 		}
 	}
 
@@ -378,5 +378,7 @@ public class Synthetic
 		frequencies.close();
 		means.close();
 		factors.close();
+		
+		
 	}
 }

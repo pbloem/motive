@@ -227,15 +227,13 @@ public class ClassExperiment
 			motiveWriter.write(cls + "");
 			for(double v : featuresMotive(bg, motifs))
 				motiveWriter.write(", " + v);
+			motiveWriter.newLine();
+			motiveWriter.flush();
 			
 			fanmodWriter.write(cls + "");
 			for(double v : featuresFANMOD(bg, motifs))
 				fanmodWriter.write(", " + v);
-			
-			motiveWriter.newLine();
 			fanmodWriter.newLine();
-			
-			motiveWriter.flush();
 			fanmodWriter.flush();
 		}
 		

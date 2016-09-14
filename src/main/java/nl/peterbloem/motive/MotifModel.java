@@ -538,7 +538,7 @@ public class MotifModel
 		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
 		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
 		
-		Pair<Integer, Integer> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		Pair<Long, Long> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
 		
 		// * store the template graph (as a simple graph) 
 		bits.add("subbed", ERSimpleModel.undirected(pair.first(), pair.second(), true));
@@ -584,7 +584,7 @@ public class MotifModel
 		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
 		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
 		
-		Pair<Integer, Integer> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		Pair<Long, Long> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
 		
 		// * store the template graph (as a simple graph) 
 		bits.add("subbed", ERSimpleModel.directed(pair.first(), pair.second(), true));
@@ -1381,16 +1381,16 @@ public class MotifModel
 	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
 	 * @return
 	 */
-	public static Pair<Integer, Integer> subbedERInstances(
+	public static Pair<Long, Long> subbedERInstances(
 			UGraph<?> graph, UGraph<?> sub, List<List<Integer>> occurrences,
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
 		if(occurrences.isEmpty())
-			return p(graph.size(), graph.numLinks());
+			return p((long)graph.size(), graph.numLinks());
 		
-		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
-		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
+		long subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		long subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
 		// - we still need to remove multiple links from subbedNumLinks
 	
 		// * Which nodes have been mapped to which instance node 
@@ -1456,16 +1456,16 @@ public class MotifModel
 	 * @param rewiring An empty list, receiving the sequence of rewiring integers.
 	 * @return
 	 */
-	public static Pair<Integer, Integer> subbedERInstances(
+	public static Pair<Long, Long> subbedERInstances(
 			DGraph<?> graph, DGraph<?> sub, List<List<Integer>> occurrences,
 			FrequencyModel<Pair<Integer, Integer>> multiEdges,
 			List<List<Integer>> rewiring)
 	{
 		if(occurrences.isEmpty())
-			return p(graph.size(), graph.numLinks());
+			return p((long)graph.size(), graph.numLinks());
 		
-		int subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
-		int subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
+		long subbedSize = graph.size() - occurrences.size() * (occurrences.get(0).size() - 1);
+		long subbedNumLinks = graph.numLinks() - sub.numLinks() * occurrences.size();
 		// - we still need to remove multiple links from subbedNumLinks
 	
 		// * Which nodes have been mapped to which instance node 

@@ -173,7 +173,7 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 		for(DGraph<L> sub : fm.tokens())
 			if(fm.frequency(sub) >= minFreq)
 			{
-				int nl = sub.numLinks();
+				int nl = (int)sub.numLinks();
 				
 				// * A map from nodes to occurrences containing them
 				Map<DNode<L>, List<Occurrence>> map = 

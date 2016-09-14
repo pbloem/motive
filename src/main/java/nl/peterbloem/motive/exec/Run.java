@@ -148,6 +148,11 @@ public class Run
 			usage="The number of instances to use (samples from the total available)")
 	private static int classNumInstances = 100;
 	
+	@Option(
+			name="--class.sizes",
+			usage="The motif sizes to use as features")
+	private static String classSizes = "3,4";
+	
 	/**
 	 * Main executable function
 	 * @param args
@@ -204,6 +209,17 @@ public class Run
     		exp.instanceDepth = classDepth;
     		exp.mixingTime = classMixingTime;
     		exp.numInstances = classNumInstances;
+
+    		exp.sizes = new ArrayList<Integer>();
+    		try{
+	    		for(String elem : classSizes.split(","))
+	    		{
+	    			exp.sizes.add(Integer.parseInt(elem));
+	    		}
+    		} catch(RuntimeException e)
+    		{
+    			throw new RuntimeException("Failed to parse sizes argument: " + classSizes + " (does it contain spaces, or non-integers?)." , e);
+    		}
     		
     		try {
 				exp.main();

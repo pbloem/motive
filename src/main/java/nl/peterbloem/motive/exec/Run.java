@@ -206,7 +206,7 @@ public class Run
     		exp.numInstances = classNumInstances;
     		
     		try {
-				exp.main(args);
+				exp.main();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

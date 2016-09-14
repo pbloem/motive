@@ -129,7 +129,7 @@ public class ClassExperiment
 	public Map<String, String> map = null;
 	
 	
-	public void main(String[] args)
+	public void main()
 		throws IOException
 	{
 		tic();

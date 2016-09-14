@@ -22,7 +22,7 @@ and the following dependency:
 	<dependency>
 	    <groupId>com.github.pbloem</groupId>
 	    <artifactId>motive</artifactId>
-	    <version>v.1.xxx</version> <!-- check http://jitpack.io/pbloem/motive for the latest version -->
+	    <version>v0.1.XXX</version> <!-- check http://jitpack.io/pbloem/motive for the latest version -->
 	</dependency>
 ```
 Check the jitpack link above for linking from gradle/sbt/leiningen projects, and to see what the latest release is.

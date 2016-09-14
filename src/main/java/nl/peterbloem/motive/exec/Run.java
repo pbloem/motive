@@ -204,6 +204,12 @@ public class Run
     		exp.instanceDepth = classDepth;
     		exp.mixingTime = classMixingTime;
     		exp.numInstances = classNumInstances;
+    		
+    		try {
+				exp.main(args);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
     		    		
     		
     	} else if ("preload".equals(type.toLowerCase()))

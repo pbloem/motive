@@ -5,7 +5,7 @@ A proof-of-concept library for motif analysis using MDL techniques. It contains 
 
 Each release on github comes with a compiled JAR file which you can run as a command-line program. Download [the latest one here](https://github.com/pbloem/motive/releases). See the section _examples_ below, for how to use it.
 
-If you would like to call the code directly from your own program, the simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/pbloem/motive). Just include the following repository in your pom:
+If you would like to call the code directly from your own program, the simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/#pbloem/motive). Just include the following repository in your pom:
 
 ```xml
     <repositories>
@@ -22,7 +22,7 @@ and the following dependency:
 	<dependency>
 	    <groupId>com.github.pbloem</groupId>
 	    <artifactId>motive</artifactId>
-	    <version>v.1.xxx</version> <!-- check http://jitpack.io/pbloem/motive for the latest version -->
+	    <version>v0.1.XXX</version> <!-- check http://jitpack.io/#pbloem/motive for the latest version -->
 	</dependency>
 ```
 Check the jitpack link above for linking from gradle/sbt/leiningen projects, and to see what the latest release is.

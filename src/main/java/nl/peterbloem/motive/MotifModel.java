@@ -122,7 +122,7 @@ public class MotifModel
 					additions.add((int)removals.frequency(pair));
 				}
 						
-			bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
+			bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : (long)Functions.max(additions)));
 			bits.add("multiple-edges", OnlineModel.storeIntegers(additions)); 
 		}
 		
@@ -287,7 +287,7 @@ public class MotifModel
 		for(Pair<Integer, Integer> token : instanceToInstance.tokens())
 			additions.add((int)instanceToInstance.frequency(token) - 1);
 		
-		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
+		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : (long)Functions.max(additions)));
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 		
 		// * check for any disconnected nodes and add 0s
@@ -431,7 +431,7 @@ public class MotifModel
 		
 		rest.add("multi-edges", Functions.prefix(
 				additions.isEmpty() ? 
-				0 : Functions.max(additions)));
+				0 : (long)Functions.max(additions)));
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 		
 		// * check for any disconnected nodes and add 0s
@@ -682,7 +682,7 @@ public class MotifModel
 		for(Pair<Integer, Integer> token : instanceToInstance.tokens())
 			additions.add((int)instanceToInstance.frequency(token) - 1);
 		
-		bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : max(additions)));
+		bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : (long)max(additions)));
 		bits.add("multiple-edges", OnlineModel.storeIntegers(additions)); 
 	}
 	
@@ -751,7 +751,7 @@ public class MotifModel
 		for(Pair<Integer, Integer> token : instanceToInstance.tokens())
 			additions.add((int)instanceToInstance.frequency(token) - 1);
 				
-		bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : max(additions)));
+		bits.add("multiple-edges", Functions.prefix(additions.isEmpty() ? 0 : (long)max(additions)));
 		bits.add("multiple-edges", OnlineModel.storeIntegers(additions)); 
 	}	
 

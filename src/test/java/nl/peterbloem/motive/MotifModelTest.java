@@ -257,7 +257,7 @@ public class MotifModelTest
 					additions.add((int)removals.frequency(pair));
 				}
 			
-			rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
+			rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : (long) Functions.max(additions)));
 			rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 					
 			// * Store the rewiring information
@@ -327,7 +327,7 @@ public class MotifModelTest
 				additions.add((int)removals.frequency(pair));
 			}
 		
-		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : Functions.max(additions)));
+		rest.add("multi-edges", Functions.prefix(additions.isEmpty() ? 0 : (long) Functions.max(additions)));
 		rest.add("multi-edges", OnlineModel.storeIntegers(additions)); 
 				
 		// * Store the rewiring information

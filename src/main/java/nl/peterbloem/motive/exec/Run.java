@@ -112,47 +112,7 @@ public class Run
 			name="--synth.maxdegree",
 			usage="Maximum degree for an instance node.")
 	private static int synthMaxDegree = 5;
-	
-	@Option(
-			name="--class.prob",
-			usage="Fanmod probability of expanding a search tree node (1.0 enumerates all subgraphs, lower means a smaller sample, and lower runtime)")
-	private static double classProb = 0.5;
-	
-	@Option(
-			name="--class.hubs",
-			usage="Number of hubs to remove from the data (the more hubs removed, the smaller the instances become.")
-	private static int classHubs = 0;
-	
-	@Option(
-			name="--class.fanmodSamples",
-			usage="Number of samples from the null model in the FANMOD experiment.")
-	private static int classFMSamples = 1000;
-	
-	@Option(
-			name="--class.motiveSamples",
-			usage="Number of subgraphs to sample in the motive experiment.")
-	private static int classMotiveSamples = 1000000;
-	
-	@Option(
-			name="--class.depth",
-			usage="Depth to which to extract the instances.")
-	private static int classDepth = 2;
-	
-	@Option(
-			name="--class.mixingTime",
-			usage="Mixing time for the curveball sampling algorithm (ie. the number of steps taken in the markov chain for each sample).")
-	private static int classMixingTime = 10000;
-	
-	@Option(
-			name="--class.numInstances",
-			usage="The number of instances to use (samples from the total available)")
-	private static int classNumInstances = 100;
-	
-	@Option(
-			name="--class.sizes",
-			usage="The motif sizes to use as features")
-	private static String classSizes = "3,4";
-	
+		
 	/**
 	 * Main executable function
 	 * @param args
@@ -185,50 +145,7 @@ public class Run
 		Global.setNumThreads(threads);
 		Global.log().info("Using " + Global.numThreads() + " concurrent threads");
     	
-    	if ("class".equals(type.toLowerCase()))
-    	{
-    	
-    		ClassExperiment exp = new ClassExperiment();
-    		
-    		try {
-				exp.graph = RDF.readSimple(file);
-			} catch (IOException e) {
-				throw new RuntimeException("Could not read RDF input file.", e);
-			}
-    		
-    		try {
-    			exp.map = ClassExperiment.tsv(classTSV);
-			} catch (IOException e) {
-				throw new RuntimeException("Could not read TSV classification file.", e);
-			}	
-    		
-    		exp.prob = classProb;
-    		exp.hubsToRemove = classHubs;
-    		exp.samples = classFMSamples;
-    		exp.motiveSamples = classMotiveSamples;
-    		exp.instanceDepth = classDepth;
-    		exp.mixingTime = classMixingTime;
-    		exp.numInstances = classNumInstances;
-
-    		exp.sizes = new ArrayList<Integer>();
-    		try{
-	    		for(String elem : classSizes.split(","))
-	    		{
-	    			exp.sizes.add(Integer.parseInt(elem));
-	    		}
-    		} catch(RuntimeException e)
-    		{
-    			throw new RuntimeException("Failed to parse sizes argument: " + classSizes + " (does it contain spaces, or non-integers?)." , e);
-    		}
-    		
-    		try {
-				exp.main();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-    		    		
-    		
-    	} else if ("preload".equals(type.toLowerCase()))
+     if ("preload".equals(type.toLowerCase()))
     	{
     		try 
     		{    			

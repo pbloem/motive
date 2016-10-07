@@ -1,5 +1,6 @@
 package nl.peterbloem.motive.exec;
 
+import static java.lang.Math.max;
 import static nl.peterbloem.kit.Functions.log2;
 import static nl.peterbloem.kit.Series.series;
 import static org.apache.commons.math3.util.ArithmeticUtils.binomialCoefficientLog;
@@ -175,8 +176,8 @@ public class CompareLarge
 		final Map<DGraph<String>, Double> factorsELMap = new ConcurrentHashMap<DGraph<String>, Double>(subs.size());
 		final Map<DGraph<String>, Double> maxFactorsMap = new ConcurrentHashMap<DGraph<String>, Double>(subs.size());
 
-		final double baselineER = (new ERSimpleModel(false)).codelength(data);
-		final double baselineEL = (new EdgeListModel(Prior.ML)).codelength(data);
+		final double baselineER = ERSimpleModel.directed(data.size(), data.numLinks(), false);
+		final double baselineEL = EdgeListModel.directed(degrees, Prior.ML);
 		
 		// * Loop over the top motifs, computing the score for each	
         ExecutorService executor = Executors.newFixedThreadPool(Global.numThreads());
@@ -222,7 +223,7 @@ public class CompareLarge
 					Global.log().info("EL motif code: " + sizeEL);
 					Global.log().info("EL factor: " + factorEL);
 					
-					max = Math.max(max, factorEL);
+					max = max(max, factorEL);
 		
 					maxFactorsMap.put(sub, max);
 				}

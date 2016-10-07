@@ -53,9 +53,6 @@ public class Run
 	@Option(name="--file", usage="Input file: a graph in edge-list encoding (2 tab separated integers per line). Multiple edges and self-loops are ignored. If type is class, this should be an RDF file.")
 	private static File file;
 	
-	@Option(name="--class.table", usage="TSV file containing the classification experiment.")
-	private static File classTSV;
-	
 	@Option(name="--filetype", usage="Filetype: edgelist, gml or graph (ie. a file created with \"--type preload\")")
 	private static String filetype = "edgelist";
 	

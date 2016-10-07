@@ -92,7 +92,7 @@
     <dependency>
 	    <groupId>com.github.Data2Semantics</groupId>
 	    <artifactId>nodes</artifactId>
-	    <version>v0.1.18</version>
+	    <version>v0.1.19</version>
 	</dependency> 
 <!--    <dependency> -->
 <!--   		<groupId>data2semantics</groupId> -->

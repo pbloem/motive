@@ -586,7 +586,7 @@ public class MotifModel
 		
 		Pair<Long, Long> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
 		
-		// * store the template graph (as a simple graph) 
+		// * store the template graph (as a simple graph) -
 		bits.add("subbed", ERSimpleModel.directed(pair.first(), pair.second(), true));
 		
 		// * store the multi-edges
@@ -599,7 +599,7 @@ public class MotifModel
 		
 		// * Store the insertion order, to preserve the precise ordering of the
 		//   nodes in the data
-		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+		long subbedSize = ((long)graph.size()) - (sub.size() - 1) * (long)occurrences.size();
 				
 		bits.add("insertions", log2Factorial(graph.size()) - log2Factorial(subbedSize));
 		bits.add("labels", Functions.prefix(occurrences.size()) + log2Choose(occurrences.size(), subbedSize)); 
@@ -846,7 +846,7 @@ public class MotifModel
 		
 		// * Store the insertion order, to preserve the precise ordering of the
 		//   nodes in the data
-		int subbedSize = graph.size() - (sub.size() - 1) * occurrences.size();
+		long subbedSize = (long)graph.size() - (sub.size() - 1) * (long)occurrences.size();
 		
 		assert(sDegrees.size() == subbedSize);
 		

@@ -206,7 +206,16 @@ public class Run
     		try {
 	    		if("edgelist".equals(filetype.toLowerCase().trim()))
 	    		{
-	    			data = useDisk ? DiskDGraph.fromFile(file, new File("./tmp/")) : Data.edgeListDirectedUnlabeledSimple(file);
+	    			if(useDisk)
+	    			{
+	    				File dir = new File("./tmp/");
+	    				dir.mkdirs();
+	    				data = DiskDGraph.fromFile(file, dir); 
+	    			} else 
+	    			{
+	    				data = Data.edgeListDirectedUnlabeledSimple(file);
+	    			}
+	    			
 	    		} else if ("gml".equals(filetype.toLowerCase().trim()))
 	    		{
 	    			if(!useDisk)

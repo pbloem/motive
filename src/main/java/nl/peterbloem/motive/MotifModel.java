@@ -1334,6 +1334,7 @@ public class MotifModel
 				
 		// * convert the rewritten links to new indices, and build a 
 		//  frequencymodel 
+		int size = 0;
 		for(Pair<Integer, Integer> link : rewLinks)
 		{
 			int f = link.first(), s = link.second();
@@ -1341,7 +1342,13 @@ public class MotifModel
 			int b = map.containsKey(s) ? map.get(s) : s;
 			
 			multiEdges.add(Pair.p(a, b));
+			
+			size ++;
+			if(size % 10000 == 0)
+				System.out.println(size + " rewritten links processed");
 		}
+	
+		System.out.println(".");
 		
 		// * Add each rewritten link _once_
 		for(Pair<Integer, Integer> link : multiEdges.tokens())
@@ -1476,7 +1483,8 @@ public class MotifModel
 				new LinkedHashSet<Pair<Integer, Integer>>();
 		
 		for(List<Integer> occurrence : occurrences)
-		{	
+		{	 
+
 			List<Integer> rw = new LinkedList<Integer>(); 
 			for(int index : occurrence)
 				map.put(index, occurrence.get(0));
@@ -1503,6 +1511,7 @@ public class MotifModel
 			}
 				
 			rewiring.add(rw);
+
 		}
 		
 		subbedNumLinks -= rewLinks.size();

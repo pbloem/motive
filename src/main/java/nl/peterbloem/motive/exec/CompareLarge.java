@@ -85,7 +85,12 @@ import nl.peterbloem.motive.UPlainMotifExtractor;
 public class CompareLarge
 {	
 	private static final int BS_SAMPLES = 10000;
-
+	
+	/** 
+	 * Maximum amount of rewritten links.
+	 */
+	public int maxRW = -1;
+	
 	/** 
 	 * Number of samples to take to find potential motifs 
 	 */
@@ -136,6 +141,8 @@ public class CompareLarge
 	public void main() throws IOException
 	{		
 		nl.peterbloem.kit.Global.secureRandom(42);
+		
+		MotifModel.setMaxRW(maxRW);
 		
 		Global.log().info("Computing motif code lengths");
 		

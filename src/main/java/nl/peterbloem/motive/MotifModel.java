@@ -72,6 +72,7 @@ import nl.peterbloem.kit.Series;
 public class MotifModel
 {
 	private static ExecutorService executor = null;
+	private static int maxRW = -1; 
 	
 	/**
 	 * Sets the threadpool to use (for the beta model). If not set, the beta 
@@ -82,6 +83,11 @@ public class MotifModel
 	public static void setExecutor(ExecutorService executor)
 	{
 		MotifModel.executor = executor;
+	}
+	
+	public static void setMaxRW(int maxRW)
+	{
+		MotifModel.maxRW = maxRW;
 	}
 
 	
@@ -833,7 +839,14 @@ public class MotifModel
 		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
 		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
 		
-		List<D> sDegrees = subbedDegrees(graph, degrees, occurrences, multiEdges, rewiring);
+		List<D> sDegrees = null;
+		try {
+			sDegrees = subbedDegrees(graph, degrees, occurrences, multiEdges, rewiring);
+		} catch(TooManyRWLinksException e)
+		{
+			Global.log().info("Number of links rewritten too high (with "+occurrences.size()+" instances). Returning Double.POSTIVE_INFINITY.");
+			return Double.POSITIVE_INFINITY;
+		}
 		
 		// * store the template graph (as a simple graph) 
 		bits.add("subbed", EdgeListModel.directed(sDegrees, Prior.COMPLETE));
@@ -1344,11 +1357,9 @@ public class MotifModel
 			multiEdges.add(Pair.p(a, b));
 			
 			size ++;
-			if(size % 10000 == 0)
-				System.out.println(size + " rewritten links processed");
+			if(maxRW > 0 && size > maxRW)
+				throw new TooManyRWLinksException();
 		}
-	
-		System.out.println(".");
 		
 		// * Add each rewritten link _once_
 		for(Pair<Integer, Integer> link : multiEdges.tokens())
@@ -1547,5 +1558,12 @@ public class MotifModel
 		if(i1 <= i2)
 			return new Pair<Integer, Integer>(i1, i2);
 		return new Pair<Integer, Integer>(i2, i1);
+	}
+	
+	private static class TooManyRWLinksException extends RuntimeException
+	{
+		private static final long serialVersionUID = -2882656149269609884L;
+
+		
 	}
 }

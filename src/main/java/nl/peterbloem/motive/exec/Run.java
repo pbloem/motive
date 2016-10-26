@@ -32,6 +32,11 @@ public class Run
 	private static File outFile = new File("./graph.db");
 	
 	@Option(
+			name="--fast.max-rw",
+			usage="Maximum number of rewritten links allowed. If the number is higher for a given motif, the motif is ignored. This is useful to limit the memory use for disk-backed graphs. -1 for no limit.")
+	private static int maxRW = -1;
+	
+	@Option(
 			name="--samples",
 			usage="Number of samples to take.")
 	private static int samples = 1000000;
@@ -241,6 +246,7 @@ public class Run
     		
     		CompareLarge large = new CompareLarge();
     		
+    		large.maxRW = maxRW;
     		large.dataName = file.getName();
     		large.data = data;
     		large.motifMinSize = minSize;

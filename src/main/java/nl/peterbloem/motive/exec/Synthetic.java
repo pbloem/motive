@@ -167,7 +167,7 @@ public class Synthetic
 	public void run(int numInstances, int run)
 	{	
 		// * Sample the compressed graph
-		UGraph<String> graph = RandomGraphs.random(n - numInstances * (sub.size() - 1), m - numInstances * sub.numLinks());
+		UGraph<String> graph = RandomGraphs.random(n - numInstances * (sub.size() - 1), m - numInstances * (int)sub.numLinks());
 		
 		Global.log().info("Finished sampling subbed graph");
 		

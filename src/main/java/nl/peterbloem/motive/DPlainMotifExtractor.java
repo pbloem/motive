@@ -124,7 +124,7 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 
 	private void run()
 	{
-		Global.log().info("Sampling motifs");		
+		if(samples > 10000) Global.log().info("Sampling motifs");		
 		fm = new FrequencyModel<DGraph<L>>();
 
 		// * The (overlapping) instances
@@ -135,12 +135,12 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 		
 //		SubgraphGenerator<L> gen = new SubgraphGenerator<L>(data, intGen);
 
-		Global.log().info("Start sampling.");
+		if(samples > 10000) Global.log().info("Start sampling.");
 		int interval = samples / 20;
 		
 		for (int i : Series.series(samples))
 		{
-			if (i % interval == 0)
+			if (i % interval == 0 && samples > 10000)
 				Global.log().info("Samples finished: " + i + " (" + ((i*100)/samples) + "%)");
 
 			List<Integer> indices = gen.generate();
@@ -162,7 +162,7 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 			occurrences.get(sub).add(occurrence);
 		}
 		
-		Global.log().info("Removing overlapping occurrences.");
+		if(samples > 10000) Global.log().info("Removing overlapping occurrences.");
 		// * Remove overlapping occurrences 
 		//   (keep the ones with the lowest exdegrees)
 		FrequencyModel<DGraph<L>> newFm = 
@@ -225,7 +225,7 @@ public class DPlainMotifExtractor<L extends Comparable<L>>
 		fm = newFm;
 		occurrences = newOccurrences;
 		
-		Global.log().info("Finished sampling motifs and removing overlaps.");
+		if(samples > 10000) Global.log().info("Finished sampling motifs and removing overlaps.");
 
 		tokens = new ArrayList<DGraph<L>>(fm.sorted());
 	}

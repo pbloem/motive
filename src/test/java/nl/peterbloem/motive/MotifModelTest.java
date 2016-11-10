@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.nodes.DGraph;
+import org.nodes.DiskDGraph;
 import org.nodes.Graph;
 import org.nodes.Graphs;
 import org.nodes.Link;
@@ -46,6 +47,7 @@ import org.nodes.random.RandomGraphs;
 import org.nodes.util.bootstrap.LogNormalCI;
 
 import nl.peterbloem.kit.BitString;
+import nl.peterbloem.kit.FileIO;
 import nl.peterbloem.kit.FrequencyModel;
 import nl.peterbloem.kit.Functions;
 import nl.peterbloem.kit.Global;
@@ -833,6 +835,45 @@ public class MotifModelTest
 
 			}
 		}
+	}
+	
+	@Test
+	public void diskBasedStressTest()
+	{	
+		int n = 100;
+		
+		for(int i : series(n))
+		{
+			go(new Random().nextInt(10000));
+			Functions.dot(i, n);
+		}
+	}
+	
+	public void go(long seed)
+	{	
+		Global.setSeed(seed);
+		DGraph<String> graph = RandomGraphs.randomDirectedFast(1000, 500000);
+		graph = DiskDGraph.copy(graph, new File("./tmp/"));
+		
+		DPlainMotifExtractor<String> ex = new DPlainMotifExtractor<>(graph, 100, 4, 3);
+		List<D> degrees = DSequenceEstimator.sequence(graph);
+		
+		for(DGraph<String> sub : ex.subgraphs())
+		{
+			List<List<Integer>> occ = ex.occurrences(sub);
+			
+			try 
+			{
+				MotifSearchModel.sizeELInst(graph, degrees, sub, occ, true, -1);
+			} catch(RuntimeException e)
+			{
+				Global.log().info("seed " + Global.randomSeed());
+				throw e;
+			}
+		}
+		
+		FileIO.rDelete(new File("./tmp"));
+		
 	}
 	
 }

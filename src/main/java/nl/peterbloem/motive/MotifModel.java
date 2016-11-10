@@ -847,7 +847,7 @@ public class MotifModel
 			Global.log().info("Number of links rewritten too high (with "+occurrences.size()+" instances). Returning Double.POSTIVE_INFINITY.");
 			return Double.POSITIVE_INFINITY;
 		}
-		
+				
 		// * store the template graph (as a simple graph) 
 		bits.add("subbed", EdgeListModel.directed(sDegrees, Prior.COMPLETE));
 		
@@ -1346,7 +1346,7 @@ public class MotifModel
 			subbedDegrees.set(occurrence.get(0), new D(0, 0));
 				
 		// * convert the rewritten links to new indices, and build a 
-		//  frequencymodel 
+		//   frequencymodel 
 		int size = 0;
 		for(Pair<Integer, Integer> link : rewLinks)
 		{

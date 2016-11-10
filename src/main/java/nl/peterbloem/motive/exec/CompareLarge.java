@@ -144,10 +144,13 @@ public class CompareLarge
 		
 		MotifModel.setMaxRW(maxRW);
 		
+		Global.log().info("Graph size: " + data.size() + " nodes.");
+		Global.log().info("Graph size: " + data.numLinks() + " links.");
+
 		Global.log().info("Computing motif code lengths");
 		
 		final List<D> degrees = graphLoop ? null : DSequenceEstimator.sequence(data);
-
+		
 		// * Sample for motifs, and collect the results
 		DPlainMotifExtractor<String> ex 
 		= new DPlainMotifExtractor<String>(

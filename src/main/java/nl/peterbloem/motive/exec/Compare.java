@@ -353,7 +353,6 @@ public class Compare
 				(List) frequencies,
 				(List) factorsER, 
 				(List) factorsEL, 
-				(List) factorsBeta, 
 				(List) subs);
 		
 		File numbersFile = new File("numbers.csv");

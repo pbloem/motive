@@ -269,7 +269,6 @@ public class CompareLarge
 				factorsEL, Collections.reverseOrder(comp), 
 				(List) frequencies,
 				(List) factorsER, 
-				(List) factorsEL, 
 				(List) subs);
 		
 		File numbersFile = new File("numbers.csv");

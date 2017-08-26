@@ -269,9 +269,13 @@ public class Run
     		if(useDisk)
     		{
     			File dir = new File("./tmp/");
-    			for(File file : dir.listFiles())
-    				file.delete();
-    			dir.delete();
+    			
+    			if(dir.exists())
+    			{
+    				for(File file : dir.listFiles())
+    					file.delete();
+        			dir.delete();
+    			}
     		}
     		
     	} else if ("full".equals(type.toLowerCase()))

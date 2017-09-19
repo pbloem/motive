@@ -5,7 +5,9 @@ A proof-of-concept library for motif analysis using MDL techniques. It contains 
 
 Each release on github comes with a compiled JAR file which you can run as a command-line program. Download [the latest one here](https://github.com/pbloem/motive/releases). See the section _examples_ below, for how to use it.
 
-If you would like to call the code directly from your own program, the simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/#pbloem/motive). Just include the following repository in your pom:
+### Calling the code
+
+The command line provides some basic results, but to do real experiments, you will probably want to call the code directlyfrom your own program. The simplest way is to include it as a Maven dependency through [jitpack](http://jitpack.io/#pbloem/motive). Just include the following repository in your pom.xml file:
 
 ```xml
     <repositories>
@@ -27,7 +29,7 @@ and the following dependency:
 ```
 Check the jitpack link above for linking from gradle/sbt/leiningen projects, and to see what the latest release is.
 
-Have a look at the classes Compare and CompareLarge for hints on how to set up a motif experiment from within java code. For comman line usage, see the next section.
+Have a look at the classes Compare and CompareLarge for hints on how to set up a motif experiment from within java code. For command line usage, see the next section.
 
 ## Usage examples
 
@@ -63,7 +65,7 @@ The indices are assumed to be _consecutive_, i.e. starting at zero, with no nonn
 
 All files from the [KONECT repository](http://konect.uni-koblenz.de/networks/) should work out of the box.
   
-The GML format is also supported with the switch '''--filetype gml'''. This is not well tested, so your mileage may vary.
+The GML format is also supported with the switch ``--filetype gml``. This is not well tested, so your mileage may vary.
 
 ## Plotting
 
@@ -75,8 +77,8 @@ The plots in the paper were produced using python scripts. Motive will copy thes
  
 If this doesn't work, [make a ticket](https://github.com/pbloem/motive/issues) on github describing what went wrong, and we'll try to help you out. 
 
-## Miscelaneous notes
+## Miscellaneous notes
 
 * The Nauty implementation, used for graph canonization is a re-implementation. It is not complete, and the real Nauty is likely much faster. If many samples of large motifs (eg. 12 nodes) are necessary, this will become the bottleneck. Up to 10 nodes, however, you should be able to take around a 25k 10-node samples per minute, even on commodity hardware. 
-* If you get a memory error, increase your heap space by adding ```-Xmx3000m''' before "-jar". This sets the heap space to 3 gigabytes. Don't set the heap space to more memory than your machine has available (and leave at least  500m to 1000m for the system). If you still get memory errors, reduce the maximum motif size, the number of samples, or see if you can work with a smaller dataset (or move to a machine with more memory, of course).
+* If you get a memory error, increase your heap space by adding ``-Xmx3g`` before ``-jar``. This sets the heap space to 3 gigabytes. Don't set the heap space to more memory than your machine has available (and leave at least  500m to 1000m for the system). If you still get memory errors, reduce the maximum motif size, the number of samples, or see if you can work with a smaller dataset (or move to a machine with more memory, of course).
  

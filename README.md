@@ -59,7 +59,7 @@ java -jar motive.jar --type full --file data.txt --minsize 3 --maxsize 5 --sampl
 
 ### Data format
 
-The default data format is a text file with a list of edges: each line should contain two nonnegative integers, separated by whitespace: indicating an edge between the two nodes indicated by the given indices. Any lines starting with '#' are ignored. 
+The default data format is a text file with a list of edges: each line should contain two nonnegative integers, separated by whitespace: indicating an edge between the two nodes indicated by the given indices. Any lines starting with '#' are ignored. If there is anything after these first two integers, it is ignored as well.
 
 The indices are assumed to be _consecutive_, i.e. starting at zero, with no nonnegative integers unused. If your indices start at 100000, the parsed graph will also have (orphaned) nodes for all integers from 0 to 100000. 
 

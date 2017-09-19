@@ -63,7 +63,7 @@ The default data format is a text file with a list of edges: each line should co
 
 The indices are assumed to be _consecutive_, i.e. starting at zero, with no nonnegative integers unused. If your indices start at 100000, the parsed graph will also have (orphaned) nodes for all integers from 0 to 100000. 
 
-All files from the [KONECT repository](http://konect.uni-koblenz.de/networks/) should work out of the box.
+You can find some examples [packaged with the Nodes library](https://github.com/Data2Semantics/nodes/tree/master/nodes/src/main/resources/graphs). Files from the [KONECT repository](http://konect.uni-koblenz.de/networks/) should also work out of the box.
   
 The GML format is also supported with the switch ``--filetype gml``. This is not well tested, so your mileage may vary.
 

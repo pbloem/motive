@@ -32,6 +32,7 @@ Have a look at the classes Compare and CompareLarge for hints on how to set up a
 ## Usage examples
 
 Display usage information:
+
 ```bash
 java -jar motive.jar --help 
 ```
@@ -45,14 +46,25 @@ java -jar motive.jar --type synth --synth.repeats 3 --synth.n 50 --synth.m 600 -
 Run the "fast" experiment (ER model and EdgeList model) on a particular dataset, finding motifs of size up to (and including) 10:
 
 ```bash
-java -jar motive.jar --type fast --file /Users/Peter/Documents/Datasets/graphs/cit/simple.txt --minsize 3 --maxsize 10 --samples 1000000 --maxmotifs 30 
+java -jar motive.jar --type fast --file data.txt --minsize 3 --maxsize 10 --samples 1000000 --maxmotifs 30 
 ```
 
 The "full" experiment includes the precise DS model as well. This is a bit slower.
 ```bash
-java -jar motive.jar --type full --file /Users/Per/Documents/Datasets/graphs/cit/simple.txt --minsize 3 --maxsize 5 --samples 100000 --maxmotifs 30
+java -jar motive.jar --type full --file data.txt --minsize 3 --maxsize 5 --samples 100000 --maxmotifs 30
 
-```  
+```
+
+### Data format
+
+The default data format is a text file with a list of edges: each line should contain two nonnegative integers, separated by whitespace: indicating an edge between the two nodes indicated by the given indices. Any lines starting with '#' are ignored. 
+
+The indices are assumed to be _consecutive_, i.e. starting at zero, with no nonnegative integers unused. If your indices start at 100000, the parsed graph will also have (orphaned) nodes for all integers from 0 to 100000. 
+
+All files from the [KONECT repository](http://konect.uni-koblenz.de/networks/) should work out of the box.
+  
+The GML format is also supported with the switch '''--filetype gml'''. This is not well tested, so your mileage may vary.
+
 ## Plotting
 
 The plots in the paper were produced using python scripts. Motive will copy these into the output directory and attempt to run them. This will fail if the correct dependencies are not installed. Here's a short recipe for getting the scripts to run:

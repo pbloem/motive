@@ -57,7 +57,7 @@ java -jar motive.jar --type full --file data.txt --minsize 3 --maxsize 5 --sampl
 
 ```
 
-### Data format
+### Input Data format
 
 The default data format is a text file with a list of edges: each line should contain two nonnegative integers, separated by whitespace: indicating an edge between the two nodes indicated by the given indices. Any lines starting with '#' are ignored. If there is anything after these first two integers, it is ignored as well.
 
@@ -67,7 +67,15 @@ You can find some examples [packaged with the Nodes library](https://github.com/
   
 The GML format is also supported with the switch ``--filetype gml``. This is not well tested, so your mileage may vary.
 
-## Plotting
+### Output format
+
+The command line tool produces its primary output as a collection of text files. For each (potential) motif found, one .edgelist file is produced. This file captures _only the structure_ of the motif, not its labels in the original graph.
+
+The files numbers.csv contains the compression ratios for each motifs. metadata.json contains some additional information, mostly required for producing the correct plot.
+
+Currently, the instances of each motif in the graph are not written to a file. We hope to add this functionality in a future update. From within the code, this information _is_ available. After running the sampling experiment, you can use the method ``occurrences(...)`` in DPlainMotifExtractor and UPlainMotifExtractor to get a list of instances for a given motif.
+
+### Plotting
 
 The plots in the paper were produced using python scripts. Motive will copy these into the output directory and attempt to run them. This will fail if the correct dependencies are not installed. Here's a short recipe for getting the scripts to run:
 

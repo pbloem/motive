@@ -90,9 +90,9 @@
     	<version>20160212</version>
 	</dependency>
     <dependency>
-	    <groupId>com.github.Data2Semantics</groupId>
+	    <groupId>data2semantics</groupId>
 	    <artifactId>nodes</artifactId>
-	    <version>v0.1.20</version>
+	    <version>0.0.1-SNAPSHOT</version>
 	</dependency> 
 <!--    <dependency> -->
 <!--   		<groupId>data2semantics</groupId> -->

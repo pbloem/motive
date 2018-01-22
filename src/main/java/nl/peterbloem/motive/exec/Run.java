@@ -114,6 +114,21 @@ public class Run
 			name="--synth.maxdegree",
 			usage="Maximum degree for an instance node.")
 	private static int synthMaxDegree = 5;
+	
+	@Option(
+			name="--konect.nr",
+			usage="Numeric id for the konect graph.")
+	private static int konectNr = 0;
+	
+	@Option(
+			name="--konect.wgetprefix",
+			usage="Prefix for the wget command.")
+	private static String wgetprefix = "/usr/local/bin/";
+	
+	@Option(
+			name="--konect.tarprefix",
+			usage="Prefix for the tar command.")
+	private static String tarprefix = "/usr/bin/";
 		
 	/**
 	 * Main executable function
@@ -323,6 +338,33 @@ public class Run
     		}
     		
     		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
+    	} else if ("konect".equals(type.toLowerCase()))
+    	{
+    		Global.log().info("Experiment type: KONECT");
+		    		
+    		Konect konect = new Konect();
+    		
+    		konect.id = konectNr;
+    		konect.undirected = undirected;
+    		konect.motifMinSize = minSize;
+    		konect.motifMaxSize = maxSize;
+    		konect.maxMotifs = maxMotifs;
+    		konect.motifSamples = samples;
+    		
+    		konect.wgetprefix = wgetprefix;
+    		konect.tarprefix = tarprefix;
+    		
+       		Global.log().info("Starting experiment.");
+    		Functions.tic();
+    		try {
+    			konect.main();
+    		} catch(IOException e)
+    		{
+    			throw new RuntimeException("Encountered a problem when writing the results to disk.", e);
+    		}
+    		
+    		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
+    		
     	} else 
     	{
     		Global.log().severe("Experiment type " + type + " not recognized. Exiting.");

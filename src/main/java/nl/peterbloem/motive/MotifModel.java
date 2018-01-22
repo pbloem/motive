@@ -590,7 +590,15 @@ public class MotifModel
 		FrequencyModel<Pair<Integer, Integer>> multiEdges = new FrequencyModel<Pair<Integer, Integer>>();
 		List<List<Integer>> rewiring = new LinkedList<List<Integer>>();
 		
-		Pair<Long, Long> pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		Pair<Long, Long> pair = null;
+		try 
+		{
+			pair = subbedERInstances(graph, sub, occurrences, multiEdges, rewiring);
+		} catch(TooManyRWLinksException e)
+		{
+			Global.log().info("Number of links rewritten too high (with " + occurrences.size() + " instances). Returning Double.POSTIVE_INFINITY.");
+			return Double.POSITIVE_INFINITY;
+		}
 		
 		// * store the template graph (as a simple graph) -
 		bits.add("subbed", ERSimpleModel.directed(pair.first(), pair.second(), true));
@@ -1322,6 +1330,9 @@ public class MotifModel
 						
 						rewLinks.add(Pair.p(index, node.index()));
 						
+						if(maxRW > 0 && rewLinks.size() > maxRW)
+							throw new TooManyRWLinksException();
+						
 						rw.add(i);						
 					}
 				
@@ -1333,6 +1344,8 @@ public class MotifModel
 							subbedDegrees.set(node.index(), new D(old.in(), old.out() - 1));
 							
 						rewLinks.add(Pair.p(node.index(), index));
+						if(maxRW > 0 && rewLinks.size() > maxRW)
+							throw new TooManyRWLinksException();
 						
 						rw.add(i);						
 					}
@@ -1357,8 +1370,6 @@ public class MotifModel
 			multiEdges.add(Pair.p(a, b));
 			
 			size ++;
-			if(maxRW > 0 && size > maxRW)
-				throw new TooManyRWLinksException();
 		}
 		
 		// * Add each rewritten link _once_
@@ -1508,6 +1519,8 @@ public class MotifModel
 					if(! occurrence.contains(node.index()))
 					{		
 						rewLinks.add(p(index, node.index()));
+						if(maxRW > 0 && rewLinks.size() > maxRW)
+							throw new TooManyRWLinksException();
 						
 						rw.add(i);						
 					}
@@ -1517,18 +1530,21 @@ public class MotifModel
 					{		
 						rewLinks.add(p(node.index(), index));
 						
+						if(maxRW > 0 && rewLinks.size() > maxRW)
+							throw new TooManyRWLinksException();
+						
 						rw.add(i);						
 					}
 			}
-				
+			
 			rewiring.add(rw);
-
 		}
 		
 		subbedNumLinks -= rewLinks.size();
 				
 		// * convert the rewritten links to new indices, and build a 
 		//  frequencymodel 
+		int size = 0;
 		for(Pair<Integer, Integer> link : rewLinks)
 		{
 			int f = link.first(), s = link.second();
@@ -1536,6 +1552,8 @@ public class MotifModel
 			int b = map.containsKey(s) ? map.get(s) : s;
 						
 			multiEdges.add(p(a, b));
+			
+			size ++;
 		}
 				
 		// * Add each rewritten link _once_

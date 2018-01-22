@@ -14,6 +14,12 @@ from matplotlib.pyplot import margins
 import os.path
 import json
 
+RED = 'darkred'
+G1 = 'lightgrey'
+G2 = 'silver'
+G3 = 'darkgrey'
+
+mpl.style.use('classic')
 
 font = {'family' : 'normal',
         'weight' : 'normal',
@@ -49,7 +55,7 @@ frequencies = n.genfromtxt('frequencies.csv', delimiter=',')
 factors = n.genfromtxt('factors.csv', delimiter=',')
 means = n.genfromtxt('means.csv', delimiter=',')
 
-runs = width/ni
+runs = width // ni
 
 freqMeans = means[:,0:ni]
 factMeans = means[:,ni:2*ni]
@@ -63,24 +69,27 @@ ind = n.arange(nummotifs)
 
 bw = barwidth/ni
 for i in range(ni):
-    color = u'slategrey'
-    label = u'$n^i = 0$'
+    color = G1
+    label = u'$k = 0$'
     if i == 1:
-        color = u'darkslategrey'
-        label = u'$n^i = 10$'
+        color = G2
+        label = u'$k = 10$'
     if i == 2:
-        color = u'k'
-        label = u'$n^i = 100$'
+        color = G3
+        label = u'$k = 100$'
     
     # the means as bars
+    print(color)
     bars = ax1.bar(ind - barwidth/2.0 + i * bw, factMeans[:, i], bw, color=color, zorder=1, linewidth=0)
     bars.set_label(label)
+    
 for i in range(ni):
     # the data as scatter
     for s in range(nummotifs):
+        
         min = n.min(factors[s,i*runs:(i+1)*runs])
         max = n.max(factors[s,i*runs:(i+1)*runs])
-        ax1.vlines((ind[s] - barwidth/2.0 + (i+0.5) * bw),min, max, colors='r', linewidths=2, zorder=3)
+        ax1.vlines((ind[s] - barwidth/2.0 + (i+0.5) * bw),min, max, colors=RED, linewidths=2, zorder=3)
     
 ax1.set_xlim([0 - pluswidth, nummotifs - 1 + pluswidth])
 
@@ -130,15 +139,15 @@ for path in sorted(glob.glob('motif.*.edgelist'))[:nummotifs]:
     pos = nwx.spring_layout(graph)
     nodes = nwx.draw_networkx_nodes(graph, pos, ax=axsmall, node_size=12)
     if nodes != None:
-        nodes.set_edgecolor('red')
-        nodes.set_color('red')
-    color = 'r' if i == sub_index else 'k'
+        nodes.set_edgecolor(RED)
+        nodes.set_color(RED)
+    color = RED if i == sub_index else 'k'
     edges = nwx.draw_networkx_edges(graph, pos, alpha=0 if directed else 1, fc=color, edge_color=color)
     if nodes == None or ng < motif_size:
         (minx, maxx) = axsmall.get_xlim()
         ran = maxx - minx
         rem = motif_size if (nodes == None) else motif_size - ng
-        axsmall.scatter((n.arange(rem) * (0.333/rem) + 0.666) * ran + minx, 0 * n.ones(rem), s=12, color='r')   
+        axsmall.scatter((n.arange(rem) * (0.333/rem) + 0.666) * ran + minx, 0 * n.ones(rem), s=12, color=RED)   
 
     i = i + 1
     
@@ -148,11 +157,11 @@ ax3 = fig.add_axes([0.0 + margin + extra, row2height + margin, 1.0 - 2.0 * margi
 
 # ax3.bar(ind - barwidth/2.0, freq, barwidth, color='k')
 for i in range(ni):
-    color = u'slategrey'
+    color = G1
     if i == 1:
-        color = u'darkslategrey'
+        color = G2
     if i == 2:
-        color = u'k'
+        color = G3
     
     # the means as bars
     ax3.bar(ind - barwidth/2.0 + i * bw, freqMeans[:, i], bw, color=color, zorder=1, linewidth=0)
@@ -161,7 +170,7 @@ for i in range(ni):
     for s in range(nummotifs):
         min = n.min(frequencies[s,i*runs:(i+1)*runs])
         max = n.max(frequencies[s,i*runs:(i+1)*runs])
-        ax3.vlines((ind[s] - barwidth/2.0 + (i+0.5) * bw),min, max, colors='r', linewidths=2, zorder=3)
+        ax3.vlines((ind[s] - barwidth/2.0 + (i+0.5) * bw),min, max, colors=RED, linewidths=2, zorder=3)
         
 ax3.get_yaxis().set_tick_params(which='both', direction='out')
 

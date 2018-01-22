@@ -1,0 +1,120 @@
+name,nodes,links,directed,time (s),max motif size,year,type,source,note
+wiki-nl,1.00E+06,1.30E+07,TRUE,,,2018,ours,,
+wiki-en,1.20E+07,3.78E+08,TRUE,,,2018,ours,,
+twitter,5.30E+07,1.96E+09,TRUE,,,2018,ours,,
+friendster,6.80E+07,2.59E+06,TRUE,,,2018,ours,,
+ca-GrQc,5241,14484,FALSE,3.8,,2012,approximate census,1,
+ca-HepTh,9877,25998,FALSE,3.6,,2012,approximate census,1,
+Yeast,2361,7182,FALSE,3.4,,2012,approximate census,1,
+Jazz,198,2742,FALSE,1.84,,2012,approximate census,1,
+ca-AstroPh,18771,198110,FALSE,78.6,,2012,approximate census,1,
+soc-sign-Slashdot081106,77357,468554,FALSE,527.62,,2012,approximate census,1,
+roadNet-PA,1088092,1541898,FALSE,313.2,,2012,approximate census,1,
+amazon0302,262111,899792,FALSE,46.6,,2012,approximate census,1,
+Email-enron,36692,183831,FALSE,184.2,,2012,approximate census,1,
+cit-Patents,3774768,16518948,FALSE,125.8,,2012,approximate census,1,
+S.cerevisiae,5097,11626,FALSE,6.6,,2013,full census,2,
+Escherichia coli,2984,,FALSE,4.8,,2013,full census,2,
+D.melanogaster,7618,22864,FALSE,2.3,,2013,full census,2,
+Human,18170,137775,FALSE,16140,,2013,full census,2,
+Internet autonomous systems,25368,75004,FALSE,2940,,2013,full census,2,
+WWW,3.25E+05,1.46E+06,TRUE,1680,,2004,approximate census,3,
+E Coli,81,390,TRUE,,,2004,approximate motif,3,
+e coli,424,519,TRUE,,3,2004,full motif,4,
+b subtilis,516,577,TRUE,,3,2004,full motif,4,
+yeast,685,1052,TRUE,,3,2004,full motif,4,
+yeast 2,2341,3969,TRUE,,3,2004,full motif,4,
+signal transduction,491,989,TRUE,,3,2004,full motif,4,
+drosophila,110,307,TRUE,,3,2004,full motif,4,
+sea urchin,45,83,TRUE,,3,2004,full motif,4,
+c elegans,280,2170,TRUE,,3,2004,full motif,4,
+www,325729,1469678,TRUE,,3,2004,approximate motif,4,
+www-shakespeare,277114,927400,TRUE,,3,2004,approximate motif,4,
+www-3,47870,235441,TRUE,,3,2004,approximate motif,4,
+social-2,28,110,TRUE,,3,2004,full motif,4,
+social-3,32,96,TRUE,,3,2004,full motif,4,
+english,7724,46281,TRUE,,3,2004,full motif,4,
+french,9424,24295,TRUE,,3,2004,full motif,4,
+spanish,12642,45129,TRUE,,3,2004,full motif,4,
+japanese,3177,8300,TRUE,,3,2004,full motif,4,
+bipartite,1010,1261,TRUE,,3,2004,full motif,4,
+hpylo,,,TRUE,,,2008,full motif,5,
+ecoli,,,TRUE,,,2008,full motif,5,
+scere,,,TRUE,,,2008,full motif,5,
+dolphins,62,159,TRUE,,9,2010,full census,6,
+circuits,252,399,TRUE,,8,2010,full census,6,
+social,1000,7770,TRUE,,5,2010,full census,6,
+yeast,2361,6646,TRUE,,5,2010,full census,6,
+power,4941,6594,TRUE,,7,2010,full census,6,
+HEP-tf-1994,1764,4135,TRUE,,3,2013,partial motif,7,
+HEP-tf,27770,351389,TRUE,,3,2013,partial motif,7,
+HEP-ph,30501,344617,TRUE,,3,2013,partial motif,7,
+e coli ,424,519,TRUE,,3,2002,full motif,8,
+s cerevisae,685,1052,TRUE,,3,2002,full motif,8,
+c elegans,252,509,TRUE,,3,2002,full motif,8,
+little rock,92,984,TRUE,,3,2002,full motif,8,
+ythan,83,391,TRUE,,3,2002,full motif,8,
+st martin,42,205,TRUE,,3,2002,full motif,8,
+chesapeake,31,67243,TRUE,,3,2002,full motif,8,
+coachella,29,243,TRUE,,3,2002,full motif,8,
+skipwith,25,189,TRUE,,3,2002,full motif,8,
+b brook,25,104,TRUE,,3,2002,full motif,8,
+s15850,10383,14240,TRUE,,4,2002,approximate motif,8,
+s38584,20717,34204,TRUE,,4,2002,approximate motif,8,
+s38417,23843,33661,TRUE,,4,2002,approximate motif,8,
+s9234,5844,8197,TRUE,,4,2002,approximate motif,8,
+s13207,8651,11831,TRUE,,4,2002,approximate motif,8,
+s208,122,189,TRUE,,4,2002,full motif,8,
+s420,252,399,TRUE,,4,2002,full motif,8,
+s838,512,819,TRUE,,4,2002,full motif,8,
+nd.edu,325729,1.46E+06,TRUE,,4,2002,approximate motif,8,
+flickr,1624992,22477014,TRUE,,6,2014,approximate census,9,
+pokec,1632805,30622564,TRUE,,6,2014,approximate census,9,
+livejournal,5284459,76901758,TRUE,,6,2014,approximate census,9,
+youtube,1134890,4942035,TRUE,,6,2014,approximate census,9,
+epinions,119130,833390,TRUE,,6,2014,approximate census,9,
+slashdot,77350,516575,TRUE,,6,2014,approximate census,9,
+gnutella,6299,20776,TRUE,,6,2014,approximate census,9,
+social,67,182,TRUE,,6,2012,full census,10,
+e coli,672,1276,TRUE,,6,2012,full census,10,
+yeast,688,1079,TRUE,,6,2012,full census,10,
+complete,50,2540,TRUE,,6,2012,full census,10,
+e coli,418,519,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+csphd,1882,1740,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+yeast,688,1079,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+roget,1022,5074,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+epa,4271,8965,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+california,6175,16150,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+facebook,1899,20296,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+odlis,2900,18241,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+pairsfsg,5018,63608,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+airport,1574,28236,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+foldoc,12905,109092,TRUE,,5,2015,full motif,11,"Full, but with graph ensemble of 100, 10 and 5 graphs."
+jazz,198,2742,FALSE,,7,2015,full census,12,
+yeast,2361,6646,FALSE,,5,2015,approximate census,12,
+astroph,18772,198050,FALSE,,5,2015,approximate census,12,
+metabolic,453,2025,TRUE,,5,2015,approximate census,12,
+foldoc,13356,120700,TRUE,,5,2015,full census,12,
+neural,297,2359,TRUE,,6,2015,full census,12,
+star wars,51,157,FALSE,,9,2015,full census,12,
+youtube,1134890,2987624,TRUE,,4,2015,approximate census,12,
+portland,1588212,31204286,FALSE,,12,2014,approximate census,13,Treelets only
+enron,33696,180811,FALSE,,12,2014,approximate census,13,Treelets only
+"g(n,p)",33696,181044,FALSE,,12,2014,approximate census,13,Treelets only
+slashot,82168,438643,FALSE,,12,2014,approximate census,13,Treelets only
+PA road net,1090917,1541898,FALSE,,12,2014,approximate census,13,Treelets only
+electrical circuit,252,399,FALSE,,12,2014,approximate census,13,Treelets only
+e coli,2546,11520,FALSE,,12,2014,approximate census,13,Treelets only
+s cerevisae,5021,22119,FALSE,,12,2014,approximate census,13,Treelets only
+h pylori,687,1352,FALSE,,12,2014,approximate census,13,Treelets only
+c elegans,2391,3831,FALSE,,12,2014,approximate census,13,Treelets only
+dblp0305,109944,228461,FALSE,,6,2012,full census,14,Non-mototonic support measure
+dblp0507,135516,290363,FALSE,,6,2012,full census,14,Non-mototonic support measure
+10_3,1.00E+03,5.00E+03,FALSE,,6,2012,full census,14,Non-mototonic support measure
+10_4,1.00E+04,5.00E+04,FALSE,,6,2012,full census,14,Non-mototonic support measure
+10_5,1.00E+05,5.00E+05,FALSE,,6,2012,full census,14,Non-mototonic support measure
+10_6,1.00E+06,5.00E+06,FALSE,,5,2012,full census,14,Non-mototonic support measure
+coli,423,516,TRUE,,6,2005,full census,15,
+yeast,688,1079,TRUE,,6,2005,full census,15,
+elegans,306,2345,TRUE,,6,2005,full census,15,
+ythan,135,597,TRUE,,6,2005,full census,15,

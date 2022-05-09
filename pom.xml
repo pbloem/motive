@@ -20,6 +20,8 @@
 		  <configuration>
 		    <source>1.8</source>
 		    <target>1.8</target>
+		   
+ 
 		  </configuration>
 		</plugin>
 
@@ -73,6 +75,7 @@
                 </execution>
             </executions>
    		</plugin>
+   		
 	  </plugins>
   </build>
   
@@ -89,11 +92,12 @@
     	<artifactId>json</artifactId>
     	<version>20160212</version>
 	</dependency>
+	
     <dependency>
-	    <groupId>data2semantics</groupId>
+	    <groupId>com.github.Data2Semantics</groupId>
 	    <artifactId>nodes</artifactId>
-	    <version>0.0.1-SNAPSHOT</version>
-	</dependency> 
+	    <version>v0.1.20</version>
+    </dependency> 
 <!--    <dependency> -->
 <!--   		<groupId>data2semantics</groupId> -->
 <!--   		<artifactId>nodes</artifactId> -->

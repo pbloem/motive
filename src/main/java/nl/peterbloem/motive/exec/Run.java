@@ -215,6 +215,7 @@ public class Run
     		}
     		
     		Global.log().info("Experiment finished. Time taken: "+(Functions.toc())+" seconds.");
+    		
     	} else if ("fast".equals(type.toLowerCase()))
     	{
     		Global.log().info("Experiment type: fast");

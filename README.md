@@ -54,7 +54,6 @@ java -jar motive.jar --type fast --file data.txt --minsize 3 --maxsize 10 --samp
 The "full" experiment includes the precise DS model as well. This is a bit slower.
 ```bash
 java -jar motive.jar --type full --file data.txt --minsize 3 --maxsize 5 --samples 100000 --maxmotifs 30
-
 ```
 
 ### Input Data format
@@ -67,13 +66,37 @@ You can find some examples [packaged with the Nodes library](https://github.com/
   
 The GML format is also supported with the switch ``--filetype gml``. This is not well tested, so your mileage may vary.
 
+#### Large data
+
+If your graph is large (in the order of millions of edges), you may need to use a disk-backed store. For this, the graph should be pre-loaded.  This is done with the command
+
+```bash
+java -jar motive.jar --type preload --file data.txt
+```
+
+The graph will be loaded into a disk-backed database called `graph.db`. You can then run an experiment with the type `fast.disk`.
+
+```bash
+java -jar motive.jar --type fast.disk --file data.db
+```
+
+Make sure to use the `-Xmx` argument (before the `-jar` argument) to set the heap size as large as you can on both commands. For a node with 64 Gb of memory, we found that `-Xmx56g` was the largest to give stable results.
+
+
 ### Output format
 
-The command line tool produces its primary output as a collection of text files. For each (potential) motif found, one .edgelist file is produced. This file captures _only the structure_ of the motif, not its labels in the original graph.
+The command line tool produces its primary output as a collection of text files. For each (potential) motif found, one .edgelist file is produced. This file captures _only the structure_ of the motif, not its labels in the original graph. That is, if the motif has the shape `o -> o <- o`, then the corresponding edgelist file may look like 
 
-The files numbers.csv contains the compression ratios for each motifs. metadata.json contains some additional information, mostly required for producing the correct plot.
+```
+0 1
+1 2
+```
 
-Currently, the instances of each motif in the graph are not written to a file. We hope to add this functionality in a future update. From within the code, this information _is_ available. After running the sampling experiment, you can use the method ``occurrences(...)`` in DPlainMotifExtractor and UPlainMotifExtractor to get a list of instances for a given motif.
+For each motif, there will be a CSV file containing its occurrences. If the motif has k nodes (i.e. k=3 in the example above), then each line in the occurrences file identifies a place where the motif occurs by providing a graph node integer (corresponding to the integers in the input file) for each node in the motif.  
+
+The files `numbers.csv` contains the compression ratios for each motifs. The columns are, in order, the motif frequencies, the compression ratios for the ER model, compression ratios for the EL model, and (if the `full` experiment is run) compression ratios for the DS model. In practice the EL model provides a good trade-off between speed and motif quality.
+
+`metadata.json` contains some additional information, mostly required for producing the correct plot.
 
 ### Plotting
 

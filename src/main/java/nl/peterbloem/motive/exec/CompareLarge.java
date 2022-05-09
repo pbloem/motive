@@ -163,8 +163,7 @@ public class CompareLarge
 		for(Graph<String> sub : subsAll)
 			frequenciesAll.add(ex.frequency((DGraph<String>)sub));
 		
-		final List<List<List<Integer>>> occurrences = 
-				new ArrayList<List<List<Integer>>>(subsAll.size());
+		final List<List<List<Integer>>> occurrences = new ArrayList<List<List<Integer>>>(subsAll.size());
 		for(Graph<String> sub : subsAll)
 			occurrences.add(ex.occurrences((DGraph<String>)sub));
 	
@@ -281,10 +280,37 @@ public class CompareLarge
 		int i = 0;
 		for(Graph<String> sub : subs)
 		{
+			// * Write the motif structure as a graph 
 			File graphFile = new File(String.format("motif.%03d.edgelist", i));
 			Data.writeEdgeList(sub, graphFile);
 			
-			i++;
+			
+			// * Write all occurrences of the motif to a file
+			List<List<Integer>> occs = ex.occurrences((DGraph<String>)sub); 
+			
+			File occFile = new File(String.format("motif.%03d.occurrences.csv", i));
+			BufferedWriter occWriter = new BufferedWriter(new FileWriter(occFile));
+			
+			for (List<Integer> occ : occs)
+			{
+				boolean first = true;
+				for (int val : occ)
+				{
+					if (first)
+						first = false;
+					else
+						occWriter.write(",");
+					
+					occWriter.write(val + "");
+					
+				}
+				
+				occWriter.write("\n");
+			}
+			
+			occWriter.close();
+			
+			i ++;
 		}
 
 		JSONObject obj = new JSONObject();

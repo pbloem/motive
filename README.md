@@ -82,6 +82,11 @@ java -jar motive.jar --type fast.disk --file data.db
 
 Make sure to use the `-Xmx` argument (before the `-jar` argument) to set the heap size as large as you can on both commands. For a node with 64 Gb of memory, we found that `-Xmx56g` was the largest to give stable results.
 
+You may still get out of memory errors during the computation of the code lengths (after the sampling phase) if the graph is large. This happens if a large number of links need to be rewritten to compute the motif code (in which case the motif is likely poor anyway). To combat this add the switch
+```
+--fast.max-rw 500000
+```
+to the command. If a motif requires more links to be rewritten than this amount, it will be skipped (although it may still succeed with a lower nunber of instances). A warning will be written to the error log every time this happens.
 
 ### Output format
 
